@@ -445,7 +445,7 @@ output and can be restored with `JSON.parse(text, reviveCoreValue)`.
 The complete manual has an overview, a page for every public class, number
 parsing details, an API index, and runnable examples:
 
-- [Published documentation](https://core.ratmath.com/)
+- [Published documentation](https://ratmath.com/core/)
 - [Documentation source](documentation/)
 
 Build the GitHub Pages site manually with:

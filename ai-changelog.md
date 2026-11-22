@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Docs move to ratmath.com/core
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-22
+
+Documentation is served at https://ratmath.com/core/ instead of core.ratmath.com (James, 2026-11-22: library docs live under ratmath.com).
+
+Removed `documentation/CNAME`; updated the Quarto `site-url`, `package.json` homepage, README link, and the built `docs/` sitemap, robots.txt and link filter. core.ratmath.com is kept alive by a separate redirect site.
+
 ## Strict links, unbounded ends and Region (0.9.0)
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-22

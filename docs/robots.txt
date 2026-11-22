@@ -1,1 +1,1 @@
-Sitemap: https://core.ratmath.com/sitemap.xml
+Sitemap: https://ratmath.com/core/sitemap.xml

@@ -7,7 +7,7 @@ project:
 
 website:
   title: "@ratmath/core"
-  site-url: https://core.ratmath.com/
+  site-url: https://ratmath.com/core/
   repo-url: https://github.com/ratmath/core
   repo-actions: [source, issue]
   navbar:
