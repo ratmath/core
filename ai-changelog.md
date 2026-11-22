@@ -2,6 +2,15 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Strict links, unbounded ends and Region (0.9.0)
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-22
+
+`R` chains accept `:!` (strict), `_:`/`:_` (unbounded ends) and `||`; new `src/region.js` (`Region`, `R.region`) ports `@ratmath/analytic`'s piecewise regions into Core.
+
+Spellings agreed with James on 2026-11-22: `_` is the unbounded side and `||` the union, so the
+same text reads in Core, analytic and RiX. Tests in `tests/region.test.js`.
+
 ## Release 0.8.0
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-14

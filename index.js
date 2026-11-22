@@ -49,6 +49,7 @@ import {
   parseRepeatingDecimal,
 } from "./src/number-parser.js";
 import { R } from "./src/r-template.js";
+import { Region } from "./src/region.js";
 import { product, range, seq, sum } from "./src/sequences.js";
 import { ExactList, exact } from "./src/exact-list.js";
 import {
@@ -69,6 +70,7 @@ export {
   Rational,
   RationalInterval,
   RationalIntervalSet,
+  Region,
   RANGE_ARITHMETIC_CHECKER_ID,
   RANGE_OPERATION_RESULT_SCHEMA,
   asRationalIntervalSet,
@@ -129,6 +131,7 @@ export default {
   Rational,
   RationalInterval,
   RationalIntervalSet,
+  Region,
   RANGE_ARITHMETIC_CHECKER_ID,
   RANGE_OPERATION_RESULT_SCHEMA,
   asRationalIntervalSet,

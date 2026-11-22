@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 0.9.0 — 2026-11-22
+
+Betweenness chains gain strict links, unbounded ends and unions, and a new
+`Region` reads them as sets (moved from `@ratmath/analytic`).
+
+### Added
+
+- `:!` is a strict link in an `R` chain: ``R`2:!${x}:8` `` is 2 < x ≤ 8 and
+  ``R`2:${x}:!8` `` is 2 ≤ x < 8.
+- `_` beside a colon (`_:` or `:_`) is an unbounded end: ``R`_:${x}:8` `` is
+  x ≤ 8. A chain with `_` reads ascending. `_` anywhere else throws, as do
+  two-value forms such as ``R`_:5` `` and ``R`2:!5` ``.
+- `||` joins chains: ``R`0:${x}:1 || 2:${x}:3` ``.
+- `Region` and `R.region`: chains on a variable as a set of rationals, with
+  parameters, unions with `||`, and one integer variable affine in the bounds
+  (``R.region`2n:x:!2n+1` ``). Methods `match`, `contains`, `intervals`,
+  `breakpoints` and `within` (a `RationalIntervalSet`).
+
 ## 0.8.0 — 2026-11-14
 
 `R` reads the interval colon by spacing, as RiX does, which changes two

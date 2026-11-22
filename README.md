@@ -118,7 +118,25 @@ the unspaced text around it first, so `1:2 + 3:4` is `4:6`, `1:2 * 2` is `2:4`
 and `1:n+1` is `1:(n+1)`. Three or more colon-joined values are a betweenness
 test returning a boolean: `` R`0:${x}:1` `` is `true` when x lies in [0, 1]
 (`` R.between`0:${x}:1` `` is the same test, typed `boolean` for TypeScript).
-See the exact-expressions page. Interpolations may be Core values, bigints,
+In a chain, `:!` is a strict link (`` R`0:!${x}:1` `` means 0 < x ≤ 1), `_` is
+an unbounded end (`` R`_:${x}:1` `` means x ≤ 1; a chain with `_` reads
+ascending), and `||` joins chains. See the exact-expressions page.
+
+### Regions
+
+`R.region` (or `Region.parse(text, { params })`) turns chains on a variable into
+a set of rationals, with at most one extra name as an integer variable whose
+bounds are affine in it:
+
+```js
+import { R, Region } from "@ratmath/core";
+
+const even = R.region`2n:x:!2n+1`;  // 2n ≤ x < 2n+1 for some integer n
+even.match(R`5/2`);                // { n: 1 }
+even.breakpoints(0, 3);            // 0, 1, 2, 3
+even.within(0, 3);                 // RationalIntervalSet [0, 1) ∪ [2, 3)
+Region.parse("_:x:!-1 || 1:!x:_").contains(0); // false
+``` Interpolations may be Core values, bigints,
 safe integers or literal strings; inexact JS numbers such as `0.1` are rejected.
 
 ### Sums, products and ranges
