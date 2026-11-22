@@ -87,7 +87,28 @@ describe("Region", () => {
     expect(Region.parse("x0:x:x0+h", { params: { x0: 1, h: "1/2" } }).contains("3/2")).toBe(true);
   });
 
+  test("division, powers and unbounded-below integer pieces", () => {
+    expect(Region.parse("n/2:x:!(n+1)/2").match("3/4").n).toBe(1);
+    expect(Region.parse("2^2:x:(1/2)^-3").contains(5)).toBe(true);
+    // n bounded below only: the smallest fitting n
+    expect(Region.parse("_:x:!2n").match(4).n).toBe(3);
+    expect(Region.parse("_:x:2n").match(3).n).toBe(2);
+    // n bounded above only: the largest fitting n
+    expect(Region.parse("_:x:-n").match(4).n).toBe(-4);
+    expect(Region.parse("_:x:!-n").match(4).n).toBe(-5);
+  });
+
+  test("from, test and toString", () => {
+    const r = Region.parse(" 2n :x:! 2n+1 ");
+    expect(Region.from(r)).toBe(r);
+    expect(Region.from("0:x:1").test("1/2")).toBe(true);
+    expect(r.toString()).toBe("2n :x:! 2n+1");
+    expect(String(R.region`${new Rational(1, 2)}:x:1`)).toBe("1/2:x:1");
+  });
+
   test("bad regions throw", () => {
+    expect(() => Region.parse("1/(n-n):x:2")).toThrow("divides by 0");
+    expect(() => Region.parse("2^(1/2):x:2")).toThrow("integer powers");
     expect(() => Region.parse("n^2:x:n^2+1")).toThrow("affine");
     expect(() => Region.parse("p:x:4", { params: { p: R`3:4` } })).toThrow("exact rational");
     expect(() => Region.parse("1:y:2", { variable: "x" })).toThrow("middle");

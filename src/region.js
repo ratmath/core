@@ -173,13 +173,12 @@ function evaluate(ast, env) {
           if (b.numerator === 0n) fail("a bound divides by 0", RangeError);
           return a.divide(b);
         case "neg": return a.negate();
-        case "^":
+        default: // "^"
           if (b.denominator !== 1n) fail("bounds take integer powers only", TypeError);
           return a.pow(b.numerator);
       }
     }
   }
-  return fail("unknown bound");
 }
 
 /** A bound as c0 + c1·n in the integer variable (c1 = 0 without one). */
