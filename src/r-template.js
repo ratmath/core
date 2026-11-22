@@ -39,6 +39,7 @@ import { Rational } from "./rational.js";
 import { RationalInterval } from "./rational-interval.js";
 import { parseNumber } from "./number-parser.js";
 import { BaseSystem } from "./base-system.js";
+import { region } from "./region.js";
 
 // A numeric literal is one Core literal token: digits with _ grouping, mixed
 // numbers, decimals with # repeats and {d~n} runs, [..] uncertainty, ? prefixes.
@@ -52,7 +53,10 @@ const PREFIXED = /^0(?:z\[(\d+)\]|([a-zA-Z]))([0-9a-zA-Z]+(?:\.[0-9a-zA-Z]*)?(?:
 const BASE_DIGITS = /^[0-9a-zA-Z]+(?:\.[0-9a-zA-Z]*)?(?:#[0-9a-zA-Z]+)?|^\.[0-9a-zA-Z]+(?:#[0-9a-zA-Z]+)?/;
 // RiX radix shift after a literal: 1_^3 is 1000, 2.5_^-2 is 1/40.
 const RADIX_SHIFT = /^_\^(-?\d+)/;
-const OPERATORS = ["**", "!!", "+", "-", "*", "/", "^", ":", "(", ")", "!"];
+const OPERATORS = ["||", "**", "!!", ":!", "+", "-", "*", "/", "^", ":", "(", ")", "!"];
+
+// `_` beside a colon (`_:` or `:_`) is an unbounded end of a betweenness chain.
+export const UNBOUNDED = Object.freeze({ toString: () => "_" });
 
 /** Read digits such as "ff.8" or "0.#01" in a base system, exactly. */
 function readInBase(system, text) {
@@ -90,7 +94,7 @@ function shift(value, exponent) {
   return shifted instanceof Rational && shifted.denominator === 1n ? new Integer(shifted.numerator) : shifted;
 }
 
-function readLiteral(rest, base) {
+export function readLiteral(rest, base) {
   const cf = rest.match(CONTINUED_FRACTION);
   if (cf) return { text: cf[0], value: parseNumber(cf[0]) };
   const prefixed = rest.match(PREFIXED);
@@ -118,6 +122,18 @@ function tokenize(strings, values, base) {
       const rest = text.slice(index);
       const space = rest.match(/^\s+/);
       if (space) { index += space[0].length; spaced = true; continue; }
+      if (rest.startsWith("_:")) {
+        push({ kind: "value", value: UNBOUNDED, text: "_" });
+        push({ kind: "op", value: ":", strict: false });
+        index += 2;
+        continue;
+      }
+      if (rest.startsWith(":_")) {
+        push({ kind: "op", value: ":", strict: false });
+        push({ kind: "value", value: UNBOUNDED, text: "_" });
+        index += 2;
+        continue;
+      }
       const literal = readLiteral(rest, base);
       if (literal) {
         index += literal.text.length;
@@ -127,6 +143,7 @@ function tokenize(strings, values, base) {
         continue;
       }
       const op = OPERATORS.find((candidate) => rest.startsWith(candidate));
+      if (op === ":!") { push({ kind: "op", value: ":", strict: true }); index += 2; continue; }
       if (op) { push({ kind: "op", value: op }); index += op.length; continue; }
       throw new SyntaxError(`R: unexpected '${rest[0]}' in \`${strings.join("${…}")}\``);
     }
@@ -214,6 +231,7 @@ const toRationalish = (value) => (value instanceof Integer ? value.toRational() 
 // A betweenness chain answers true or false; it is not a number to compute with.
 function numeric(value) {
   if (typeof value === "boolean") throw new TypeError("R: a betweenness chain (a:b:c) gives true or false, not a number");
+  if (value === UNBOUNDED) throw new TypeError("R: _ stands only at either end of a betweenness chain, as in _:x:8 or 2:x:_");
   return value;
 }
 
@@ -225,8 +243,15 @@ function interval(left, right) {
 
 // a:b:c... as in RiX: true when the values run in one direction (ascending or
 // descending, ties allowed); an interval operand takes part with both endpoints.
-function between(values) {
-  const points = values.map((value) => {
+// A strict link (`:!`) forbids a tie across it. An unbounded end (`_`) is
+// always satisfied, and a chain with one reads ascending: _:x:8 is x <= 8.
+function between(values, strict) {
+  const last = values.length - 1;
+  const points = values.map((value, k) => {
+    if (value === UNBOUNDED) {
+      if (k !== 0 && k !== last) throw new TypeError("R: _ stands only at either end of a betweenness chain");
+      return null;
+    }
     numeric(value);
     if (value instanceof RationalInterval) return [value.low, value.high];
     const point = toRationalish(value);
@@ -235,13 +260,18 @@ function between(values) {
   });
   const runs = (direction) => {
     for (let k = 1; k < points.length; k++) {
+      if (points[k - 1] === null || points[k] === null) continue;
       for (const a of points[k - 1]) {
-        for (const b of points[k]) if (a.compareTo(b) * direction > 0) return false;
+        for (const b of points[k]) {
+          const order = a.compareTo(b) * direction;
+          if (order > 0 || (order === 0 && strict[k])) return false;
+        }
       }
     }
     return true;
   };
-  return runs(1) || runs(-1);
+  const unbounded = points[0] === null || points[last] === null;
+  return runs(1) || (!unbounded && runs(-1));
 }
 
 // RiX currently evaluates ** like ^; the interval product power is .mpow(n).
@@ -264,7 +294,7 @@ function evaluate(strings, values, base) {
     if (!token) throw new SyntaxError("R: expression ended early");
     if (token.kind === "value") return token.value;
     if (token.value === "(") {
-      const value = range();
+      const value = either();
       if (takeOp(")") === null) throw new SyntaxError("R: missing ')'");
       return value;
     }
@@ -305,12 +335,33 @@ function evaluate(strings, values, base) {
   }
   function range() {
     const values = [sum()];
-    while (takeOp(":") !== null) values.push(sum());
+    const strict = [false];
+    while (peek()?.kind === "op" && peek().value === ":") {
+      strict.push(tokens[position++].strict === true);
+      values.push(sum());
+    }
     if (values.length === 1) return values[0];
-    return values.length === 2 ? interval(values[0], values[1]) : between(values);
+    const chain = values.length > 2 || strict.includes(true) || values.includes(UNBOUNDED);
+    if (!chain) return interval(values[0], values[1]);
+    if (values.length === 2) {
+      throw new SyntaxError("R: _ and :! belong in a betweenness chain such as _:x:8 or 2:!x:8, which has a middle value");
+    }
+    return between(values, strict);
+  }
+  // a || b: either chain holds. Both sides must be betweenness chains.
+  function either() {
+    let value = range();
+    while (takeOp("||") !== null) {
+      const right = range();
+      if (typeof value !== "boolean" || typeof right !== "boolean") {
+        throw new TypeError("R: || joins betweenness chains, such as 0:x:1 || 2:x:3");
+      }
+      value = value || right;
+    }
+    return value;
   }
 
-  const result = range();
+  const result = either();
   if (position < tokens.length) throw new SyntaxError(`R: unexpected '${peek().value ?? peek().text}'`);
   // A whole Rational result is an Integer, as in RiX.
   return result instanceof Rational && result.denominator === 1n ? new Integer(result.numerator) : result;
@@ -331,6 +382,12 @@ R.between = function between(strings, ...values) {
   }
   return result;
 };
+
+/**
+ * The region tag: R.region`2n:x:!2n+1 || 5:x:_` is a Region, the set of x the
+ * chains describe (see region.js). Interpolations are exact values.
+ */
+R.region = region;
 
 /**
  * A tag that reads unprefixed literals in another base: R.base(16)`ff.8 / 3`.

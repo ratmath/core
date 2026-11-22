@@ -412,6 +412,51 @@ export type RationalIntervalSetInput =
   | RationalIntervalSetComponentInput
   | ReadonlyArray<RationalInterval | RationalIntervalSetComponentInput>;
 
+/** One chain of a Region: bounds are c0 + c1·n (c1 is 0 without an integer variable); null is unbounded. */
+export interface RegionChain {
+  readonly L: { readonly c0: Rational; readonly c1: Rational } | null;
+  readonly U: { readonly c0: Rational; readonly c1: Rational } | null;
+  readonly loStrict: boolean;
+  readonly hiStrict: boolean;
+}
+
+/** A concrete piece of a Region; null ends are unbounded, n is the integer variable's value or null. */
+export interface RegionPiece {
+  lo: Rational | null;
+  hi: Rational | null;
+  loStrict: boolean;
+  hiStrict: boolean;
+  n: number | null;
+}
+
+type RegionPoint = Rational | Integer | bigint | number | string;
+
+/**
+ * A set of rationals written as betweenness chains on one variable:
+ * `2:!x:8`, `_:x:8`, `2n:x:!2n+1` (n an integer), `_:x:!-1 || 1:!x:_`.
+ */
+export class Region {
+  static parse(
+    text: string,
+    options?: { variable?: string; params?: Record<string, CoreNumber | bigint | number | string> },
+  ): Region;
+  static from(spec: string | Region, options?: { variable?: string; params?: Record<string, CoreNumber | bigint | number | string> }): Region;
+  readonly variable: string;
+  /** The integer variable's name, or null. */
+  readonly integer: string | null;
+  readonly alternatives: ReadonlyArray<RegionChain>;
+  readonly text: string;
+  /** { n } when x lies in the region, else null. */
+  match(x: RegionPoint): { n: number | null } | null;
+  contains(x: RegionPoint): boolean;
+  test(x: RegionPoint): boolean;
+  intervals(a: RegionPoint, b: RegionPoint): RegionPiece[];
+  breakpoints(a: RegionPoint, b: RegionPoint): Rational[];
+  /** The region inside the closed window [a, b]. */
+  within(a: RegionPoint, b: RegionPoint): RationalIntervalSet;
+  toString(): string;
+}
+
 /** A normalized finite union of exact rational intervals. */
 export class RationalIntervalSet {
   static empty: RationalIntervalSet;
@@ -714,7 +759,9 @@ export function parseNumber(value: string): CoreNumber;
  * Three or more colon-joined values are a betweenness test, and `R` returns a
  * boolean for them at run time. TypeScript cannot see inside a template, so
  * `R` is typed for numbers; write betweenness tests with `R.between`, which
- * is typed `boolean`: R.between`0:${x}:1`.
+ * is typed `boolean`: R.between`0:${x}:1`. In a chain `:!` is a strict link
+ * (R.between`0:!${x}:1`), `_` an unbounded end (R.between`_:${x}:1`, read
+ * ascending), and `||` joins chains.
  */
 export function R(
   strings: TemplateStringsArray,
@@ -731,6 +778,14 @@ export namespace R {
     strings: TemplateStringsArray,
     ...values: Array<CoreNumber | bigint | number | string>
   ): boolean;
+  /**
+   * A Region from chains on a variable: R.region`2n:x:!2n+1 || 5:x:_`.
+   * Interpolations are exact values used in the bounds.
+   */
+  function region(
+    strings: TemplateStringsArray,
+    ...values: Array<CoreNumber | bigint | number | string>
+  ): Region;
   /** A tag reading unprefixed literals in another base: R.base(16)`ff.8`. */
   function base(radix: number | bigint | Integer | BaseSystem | string): (
     strings: TemplateStringsArray,

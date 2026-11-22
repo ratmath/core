@@ -6,7 +6,8 @@ title: Exact expressions and list helpers
 Core values. `range`, `seq`, `sum` and `product` combine Core values in lists.
 They are the basis of the RatCalc calculator (`apps/calc`), where input is
 JavaScript with these in scope. *Added in 0.7.0; spacing-aware colons and
-betweenness chains since 0.8.0.*
+betweenness chains since 0.8.0; strict links, unbounded ends, `||` and
+`R.region` since 0.9.0.*
 
 ## `R`
 
@@ -89,6 +90,42 @@ arithmetic, such as ``R`(1:2:3) + 1` ``, throws a `TypeError`.
 see inside a template and so types `R` as returning a number:
 ``R.between`0:${x}:1` `` returns a `boolean` and throws if the template is not
 a chain of three or more values.
+
+#### Strict links, unbounded ends and unions
+
+```js
+R`2:!${x}:8`;             // 2 < x ≤ 8: ":!" is a strict link
+R`2:${x}:!8`;             // 2 ≤ x < 8
+R`_:${x}:8`;              // x ≤ 8: "_" beside a colon is an unbounded end
+R`2:${x}:_`;              // x ≥ 2
+R`_:${x}:!-1 || 1:!${x}:_`; // || joins chains
+```
+
+`:!` forbids a tie across that one link, in either direction. A chain with
+`_` reads ascending (otherwise `_:x:8` would hold for every x). `_` elsewhere
+throws, and so do the two-value forms ``R`_:5` `` and ``R`2:!5` ``, which have
+no middle value to test.
+
+### Regions
+
+`R.region` reads chains on a named variable as a set of rationals, without a
+value for the variable. Any other name in a bound is an integer variable
+(at most one), and each bound must be affine in it:
+
+```js
+const square = R.region`2n:x:!2n+1`;  // 2n ≤ x < 2n+1 for some integer n
+square.contains(R`1/2`);            // true
+square.match(R`5/2`);               // { n: 1 }
+square.intervals(0, 3);             // pieces { lo, hi, loStrict, hiStrict, n }
+square.breakpoints(0, 3);           // 0, 1, 2, 3
+square.within(0, 3);                // RationalIntervalSet [0, 1) ∪ [2, 3)
+Region.parse("a:x:b", { params: { a: 1, b: "5/2" } });
+```
+
+Bounds use `+ - * /`, integer powers, parentheses and juxtaposition (`2n`,
+`3(n-1)`). Interpolations are exact values. `Region.parse` takes text with
+named `params`, and `variable` to insist on the middle name. `||` joins chains;
+`_:x:_` is every rational.
 
 A whole `Rational` result is returned as an `Integer` (as in RiX):
 ``R`0.#3 * 3` `` is `Integer 1`.
