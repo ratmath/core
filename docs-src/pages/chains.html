@@ -1,0 +1,54 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>Chains and regions</h1>
+<p class="lede">Three or more values joined by colons are a betweenness test: <code>R`0:${x}:1`</code> is true when \(0 \le x \le 1\). Since 0.9.0 a chain can have strict links (<code>:!</code>), open ends (<code>_</code>) and alternatives (<code>||</code>), and <code>Region</code> reads the same text as a set.</p>
+
+<h2>Betweenness</h2>
+<p>A chain holds when its values run in one direction, ascending or descending, with ties allowed. An interval operand counts with both its ends, so <code>0:(1/4:1/2):1</code> asks that the whole interval lie inside \([0, 1]\).</p>
+<pre><code>import { R } from "@ratmath/core";
+
+const x = R`1/3`;
+R`0:${x}:1`;           // true:  0 ≤ x ≤ 1
+R`1:3:2`;              // false: 3 is not between 1 and 2
+R`3:2:1`;              // true:  descending counts too
+R`0:(1/4:1/2):1`;      // true:  both ends of the interval are inside</code></pre>
+<p>A chain is a test, not a number: <code>R`(1:2:3) + 1`</code> throws a <code>TypeError</code>. In TypeScript, use <code>R.between`…`</code>, which is typed as <code>boolean</code> and throws if its text is not a chain.</p>
+
+<h2>Strict links, open ends, unions</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>chain</th><th>means</th></tr>
+  <tr><td>2:!x:8</td><td>\(2 &lt; x \le 8\): <code>:!</code> forbids a tie across that link</td></tr>
+  <tr><td>2:x:!8</td><td>\(2 \le x &lt; 8\)</td></tr>
+  <tr><td>_:x:8</td><td>\(x \le 8\): <code>_</code> beside a colon is an unbounded end</td></tr>
+  <tr><td>2:x:_</td><td>\(x \ge 2\)</td></tr>
+  <tr><td>_:x:!-1 || 1:!x:_</td><td>\(x &lt; -1\) or \(x &gt; 1\): <code>||</code> joins chains</td></tr>
+</table></div>
+<p>A chain with <code>_</code> always reads ascending (otherwise <code>_:x:8</code> would hold for every \(x\)). <code>_</code> anywhere else throws, as do two-value forms such as <code>_:5</code> or <code>2:!5</code>, which have no middle value to test.</p>
+<pre><code>const x = R`5`;
+R`2:!${x}:8`;                   // true
+R`_:${x}:!5`;                   // false: x &lt; 5 fails
+R`_:${x}:!-1 || 1:!${x}:_`;     // true</code></pre>
+
+<h2>Regions: chains as sets</h2>
+<p><code>R.region</code> and <code>Region.parse</code> read a chain on a named variable as a set of rationals, without a value for it. One other name in the bounds may be an <em>integer</em> variable, provided each bound is affine in it (like \(2n\) or \(3(n - 1)\)); the region is then the union over all integers \(n\):</p>
+\[ \texttt{2n:x:!2n+1} \;=\; \bigcup_{n \in \mathbb Z}\, [2n,\ 2n+1) \;=\; \cdots \cup [-2, -1) \cup [0, 1) \cup [2, 3) \cup \cdots \]
+<div data-demo="chains"></div>
+<pre><code>import { R, Region } from "@ratmath/core";
+
+const squares = R.region`2n:x:!2n+1`;   // 2n ≤ x &lt; 2n+1 for some integer n
+squares.contains(R`1/2`);              // true
+squares.match(R`5/2`);                 // { n: 1 }: which n put it there
+squares.within(0, 3).toString();       // "[0,1) U [2,3)"
+squares.breakpoints(0, 3);             // [0, 1, 2, 3]
+Region.parse("a:x:b", { params: { a: 1, b: "5/2" } }).contains(R`2`);   // true</code></pre>
+<p><code>intervals(lo, hi)</code> lists the pieces in a window, each <code>{ lo, hi, loStrict, hiStrict, n }</code> (<code>null</code> for an unbounded end), and <code>within(lo, hi)</code> returns them as a <a href="#intervals#sets">RationalIntervalSet</a>. Bounds may use <code>+ - * /</code>, integer powers, parentheses and juxtaposition (<code>2n</code>). This is what <a href="https://ratmath.com/analytic/">@ratmath/analytic</a> uses for piecewise functions like <code>x^2 if 0:x:!1; 1 otherwise</code>.</p>
+
+<template data-runbox>
+const x = R`3/2`;
+PRINT("0 ≤ x ≤ 1:", R`0:${x}:1`, "   1 < x < 2:", R`1:!${x}:!2`);
+PRINT("|x| > 1:", R`_:${x}:!-1 || 1:!${x}:_`);
+
+const r = R.region`3n-1:!x:!3n+1`;
+for (const v of [R`0`, R`1`, R`5/2`, R`3`]) PRINT(v, "→", r.match(v));
+r.within(-2, 7)
+</template>

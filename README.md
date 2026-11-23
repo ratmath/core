@@ -429,7 +429,7 @@ A versioned JSON descriptor reconstructs the same validated alphabet. Expansion
 records preserve exact source, carries and remainders; locale adapters and place
 explanations preserve exact values too. Intervals and certified-approximation
 source grammar belong to the ordinary number parsers, not this scalar parser.
-See the [NumeralSystem manual](documentation/numeral-system.md) for all four
+See the [bases page](https://ratmath.com/core/bases.html) for all four
 families, supported forms, bounded failures and method contracts.
 
 The public API also includes `Integer`, `Fraction`, `FractionInterval`,
@@ -442,20 +442,27 @@ output and can be restored with `JSON.parse(text, reviveCoreValue)`.
 
 ## Documentation
 
-The complete manual has an overview, a page for every public class, number
-parsing details, an API index, and runnable examples:
+The manual at [ratmath.com/core](https://ratmath.com/core/) has an overview,
+a reference of every export, a free-form explorer, and topic pages (integers,
+rationals, continued fractions, intervals, certified approximations, the `R`
+template, chains and regions, literals, bases, lists, Stern–Brocot, types)
+with live demos. Every page ends with an editable JavaScript box that runs
+with the library in scope.
 
-- [Published documentation](https://ratmath.com/core/)
-- [Documentation source](documentation/)
-
-Build the GitHub Pages site manually with:
+The pages are HTML fragments in `docs-src/pages/`, wrapped by
+`docs-src/layout.html`. Build the site into `docs/` with:
 
 ```sh
-npm run docs:build
+bun install
+bun run docs:build            # add --verbose to print what each code box shows
 ```
 
-This requires [Quarto](https://quarto.org/) and writes the rendered site to
-`docs/`. Documentation is not rendered or published by CI.
+The build bundles the library (`docs/assets/core.js`), typesets `\( … \)` and
+`\[ … \]` math with KaTeX (pages load the shared stylesheet from
+`ratmath.com/assets/katex/`), stamps asset links with a content hash, and runs
+every page's code box, failing if one throws. `docs/assets/runbox.js` and
+`scripts/docs-kit.js` are shared verbatim with the analytic, linalg and
+algebraic docs; keep the copies in sync. Edit the sources, not `docs/*.html`.
 
 ## License
 

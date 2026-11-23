@@ -1,0 +1,73 @@
+<!-- wide: no -->
+<div class="hero">
+  <div class="eyebrow">@ratmath/core</div>
+  <h1>Exact numbers for JavaScript</h1>
+  <p class="lede">Integers, fractions, intervals and certified approximations that never round. Every value is held as whole numbers (JavaScript <code>BigInt</code>), so \(\tfrac13 + \tfrac16\) is exactly \(\tfrac12\), \(0.1 + 0.2\) is exactly \(0.3\), and a repeating decimal like \(0.\overline{142857}\) is exactly \(\tfrac17\).</p>
+</div>
+<div data-demo="hero"></div>
+<p>The box above reads RatMath's number notation through the <a href="#r-template"><code>R</code> template</a>. Try <code>1:2 * 2</code> (an interval), <code>0.#3 * 3</code> (a repeating decimal times 3 is the integer 1), or <code>3.~7~15~1</code> (a continued fraction, which is 355/113).</p>
+
+<h2>Why exact</h2>
+<p>A JavaScript <code>number</code> is a binary fraction with 53 significant bits. Most decimal fractions have no such form, so <code>0.1 + 0.2</code> gives <code>0.30000000000000004</code>, and every further step can add another rounding. Core avoids the question: a rational number \(p/q\) is stored as the two integers \(p\) and \(q\), reduced so that \(\gcd(p, q) = 1\) and \(q &gt; 0\). Sums, products and quotients of rationals are rationals, so arithmetic never needs to round.</p>
+<p>Some quantities are not single rationals: a measurement known to within a tolerance, or a value like \(\sqrt 2\) that no fraction equals. For those Core has <a href="#intervals">rational intervals</a>, closed ranges \([a, b]\) with exact ends, and <a href="#certified">certified approximations</a>, a displayed guess plus an exact interval that is guaranteed to contain the true value. Interval arithmetic returns a range that contains every possible result, so a guarantee survives every step.</p>
+
+<h2>Install</h2>
+<pre data-norun><code>npm install @ratmath/core</code></pre>
+<p>An ES module with no runtime dependencies, for Node.js 22 or newer, Bun, Deno and browsers. TypeScript declarations are included.</p>
+
+<h2>A first program</h2>
+<pre><code>import { R, Rational, parseDecimal, range, sum } from "@ratmath/core";
+
+R`1/3 + 1/6`;                       // Rational 1/2
+R`0.1 + 0.2`;                       // Rational 3/10, not 0.30000000000000004
+R`1:2 * 3`;                         // RationalInterval 3:6
+R`0.#142857 * 7`;                   // Integer 1
+
+const price = parseDecimal("19.99");
+price.multiply(parseDecimal("0.0825")).toString();   // "65967/40000", the exact tax
+
+new Rational(1, 7).toRepeatingDecimal();             // "0.#142857"
+new Rational(355, 113).toContinuedFractionString();  // "3.~7~16"
+sum(1, 10, (k) => R`1/${k}`).toString();             // "7381/2520"</code></pre>
+
+<h2>The types</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>Type</th><th>Holds</th><th>Read more</th></tr>
+  <tr><td>Integer</td><td>a whole number of any size</td><td><a href="#integers">Integers</a></td></tr>
+  <tr><td>Rational</td><td>a fraction in lowest terms; repeating decimals; continued fractions</td><td><a href="#rationals">Rationals</a>, <a href="#continued-fractions">Continued fractions</a></td></tr>
+  <tr><td>RationalInterval</td><td>a closed range \([a, b]\) with rational ends</td><td><a href="#intervals">Intervals</a></td></tr>
+  <tr><td>RationalIntervalSet</td><td>a finite union of intervals, open or closed ends, possibly unbounded</td><td><a href="#intervals#sets">Interval sets</a></td></tr>
+  <tr><td>CertifiedApproximation</td><td>a candidate value plus an exact enclosure</td><td><a href="#certified">Certified approximations</a></td></tr>
+  <tr><td>Fraction, FractionInterval</td><td>numerator and denominator exactly as written (2/4 stays 2/4)</td><td><a href="#fractions">Fractions and Stern–Brocot</a></td></tr>
+  <tr><td>Region</td><td>a set described by chains such as <code>2n:x:!2n+1</code></td><td><a href="#chains">Chains and regions</a></td></tr>
+  <tr><td>BaseSystem, NumeralSystem</td><td>digit alphabets: any base, balanced and negative bases</td><td><a href="#bases">Bases</a></td></tr>
+</table></div>
+<p>All values are immutable: every operation returns a new value. Mixed arithmetic promotes upward (Integer to Rational to RationalInterval), and an exact division of integers stays an Integer; see <a href="#promotion">Types and promotion</a>.</p>
+
+<h2>What Core does not do</h2>
+<p>Core is the exact-number layer. It does not evaluate transcendental functions such as <code>sin</code> or <code>exp</code> (that is <a href="https://ratmath.com/analytic/">@ratmath/analytic</a>), hold algebraic numbers like \(\sqrt 2\) exactly (<a href="https://ratmath.com/algebraic/">@ratmath/algebraic</a>), or do linear algebra (<a href="https://ratmath.com/linalg/">@ratmath/linalg</a>). Those libraries build on Core's values.</p>
+
+<h2>Pages</h2>
+<div class="cards">
+  <a href="#explore"><strong>Explore</strong><span>Type exact arithmetic, see every form</span></a>
+  <a href="#reference"><strong>Reference</strong><span>Every export and method</span></a>
+  <a href="#rationals"><strong>Rationals</strong><span>Repeating decimals, rounding</span></a>
+  <a href="#continued-fractions"><strong>Continued fractions</strong><span>Convergents, best approximations</span></a>
+  <a href="#intervals"><strong>Intervals</strong><span>Arithmetic that keeps a guarantee</span></a>
+  <a href="#r-template"><strong>The R template</strong><span>Exact arithmetic as text</span></a>
+  <a href="#chains"><strong>Chains and regions</strong><span>2 &lt; x ≤ 8 as <code>2:!x:8</code></span></a>
+  <a href="#bases"><strong>Bases</strong><span>Binary, hex, balanced ternary</span></a>
+  <a href="#fractions"><strong>Stern–Brocot</strong><span>Mediants and the tree of fractions</span></a>
+</div>
+
+<template data-runbox>
+// The library is in scope: R, Rational, Integer, RationalInterval, ...
+PRINT("1/3 + 1/6 =", R`1/3 + 1/6`);
+PRINT("0.1 + 0.2 =", R`0.1 + 0.2`);
+PRINT("an interval:", R`1:2 * 3`);
+
+const tax = parseDecimal("19.99").multiply(parseDecimal("0.0825"));
+PRINT("tax:", tax, "=", tax.toDecimal());
+
+new Rational(1, 7).toRepeatingDecimal()
+</template>

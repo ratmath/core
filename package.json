@@ -26,7 +26,7 @@
     "test:examples": "bash scripts/test-examples.sh",
     "test:pack": "npm pack --dry-run --cache ./tmp/npm-cache",
     "prepublishOnly": "bunx bun@1.4.2 test --coverage && npm run test:examples && npm run test:pack",
-    "docs:build": "bash scripts/build-docs.sh"
+    "docs:build": "bun scripts/build-docs.js"
   },
   "keywords": [
     "rational",
@@ -58,6 +58,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "bun-types": "1.3.14"
+    "bun-types": "1.3.14",
+    "katex": "0.19.1"
   }
 }

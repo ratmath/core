@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<link rel="canonical" href="https://ratmath.com/core/{{file}}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+{{katex}}
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="shell">
+<aside>
+  <header class="brand"><a class="mark" href="index.html">RatMath <span>core</span></a><small>Exact numbers for JavaScript</small></header>
+  <select id="toc-select" aria-label="Page">
+{{options}}
+  </select>
+  <nav class="toc" aria-label="Contents">
+{{links}}
+  </nav>
+  <p class="aside-foot"><a href="https://github.com/ratmath/core">GitHub</a> · <a href="https://www.npmjs.com/package/@ratmath/core">npm</a> · <a href="https://ratmath.com/">ratmath.com</a></p>
+</aside>
+<main>
+<section class="page{{wide}}" data-page="{{name}}">
+{{body}}
+<nav class="pager" aria-label="Previous and next page">{{pager}}</nav>
+</section>
+</main>
+</div>
+<script type="module" src="assets/pages.js"></script>
+</body>
+</html>

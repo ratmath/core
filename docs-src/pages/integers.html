@@ -1,0 +1,54 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>Integers</h1>
+<p class="lede"><code>Integer</code> wraps a JavaScript <code>BigInt</code>: whole numbers of any size, with arithmetic that promotes to fractions or intervals only when it has to.</p>
+<div data-demo="integers"></div>
+
+<h2>Construction</h2>
+<p>The constructor and <code>Integer.from</code> accept a safe integer <code>number</code>, a decimal string, a <code>bigint</code> or another <code>Integer</code>. A <code>number</code> beyond \(2^{53} - 1\) has already lost digits before Core sees it, so it is rejected: pass a string or a bigint instead.</p>
+<pre><code>import { Integer, Rational } from "@ratmath/core";
+
+const a = new Integer("9007199254740993");   // 2^53 + 1, exact
+a.value;                                     // 9007199254740993n
+Integer.from(12n).toString();                // "12"
+Integer.fromRational(new Rational(8, 4));    // Integer 2 (throws for 3/2)</code></pre>
+
+<h2>Division stays exact</h2>
+<p>Dividing integers gives an <code>Integer</code> when the division is exact and a <code>Rational</code> otherwise; nothing is truncated unless you ask for it. There are two remainders, because languages disagree about negative numbers:</p>
+<ul>
+  <li><code>modulo</code> is JavaScript's <code>%</code>: the remainder has the sign of the dividend, \(-7 \bmod 2 = -1\).</li>
+  <li><code>floorDivide</code> and <code>floorModulo</code> round the quotient down, so the remainder has the sign of the divisor: \(q = \lfloor a/b \rfloor\), \(r = a - bq\). <code>divmod</code> returns both.</li>
+</ul>
+\[ a = b\,q + r, \qquad q = \left\lfloor \frac{a}{b} \right\rfloor, \qquad 0 \le r &lt; b \ \text{ when } b &gt; 0. \]
+<pre><code>new Integer(8).divide(new Integer(4));       // Integer 2
+new Integer(7).divide(new Integer(2));       // Rational 7/2
+new Integer(-7).modulo(new Integer(2));      // -1
+new Integer(-7).floorModulo(new Integer(2)); // 1
+new Integer(-7).divmod(new Integer(2));      // [-4, 1]</code></pre>
+
+<h2>Powers</h2>
+<p><code>pow(n)</code> is exact for every integer exponent: \(2^{-3} = \tfrac18\) is a <code>Rational</code>. <code>E(k)</code> multiplies by \(10^k\), the exact form of scientific notation, so <code>new Integer(125).E(-2)</code> is \(\tfrac54\). \(0^0\) throws, as does \(0\) to a negative power: Core and RiX agree that \(0^0\) has no single value worth returning.</p>
+
+<h2>Number theory</h2>
+<p><code>gcd</code> uses Euclid's algorithm, \(\gcd(a, b) = \gcd(b, a \bmod b)\), and is always nonnegative; \(\operatorname{lcm}(a,b) = |ab| / \gcd(a,b)\), and 0 if either is 0. <code>factorial</code> gives \(n!\) and <code>doubleFactorial</code> gives \(n!! = n(n-2)(n-4)\cdots\), with \(0! = 0!! = 1\). <code>bitLength</code> is the number of bits of \(|a|\), useful for judging the cost of the next operation.</p>
+<pre><code>new Integer(84).gcd(new Integer(30));        // 6
+new Integer(12).lcm(new Integer(18));        // 36
+new Integer(20).factorial();                 // 2432902008176640000
+new Integer(7).doubleFactorial();            // 105 = 7·5·3·1
+new Integer(255).bitLength();                // 8</code></pre>
+
+<h2>Output</h2>
+<p><code>toString(radix)</code> takes a radix from 2 to 36 or a <code>BaseSystem</code>; <code>toBase(system)</code> uses any digit alphabet (see <a href="#bases">Bases</a>). <code>toNumber()</code> crosses into floating point and can lose precision.</p>
+
+<template data-runbox>
+const a = new Integer(-7), b = new Integer(2);
+PRINT("a / b =", a.divide(b));
+PRINT("modulo:", a.modulo(b), " floorModulo:", a.floorModulo(b), " divmod:", a.divmod(b));
+PRINT("2^-3 =", new Integer(2).pow(-3));
+PRINT("gcd(84, 30) =", new Integer(84).gcd(new Integer(30)));
+
+// 2^64 + 1 and its bit length
+const big = new Integer(2n ** 64n + 1n);
+PRINT(big, "has", big.bitLength(), "bits");
+new Integer(30).factorial()
+</template>

@@ -1,0 +1,56 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>Bases and numeral systems</h1>
+<p class="lede">The same exact value can be written in any base. <code>BaseSystem</code> converts integers and fractions to and from any digit alphabet; <code>NumeralSystem</code> adds balanced and negative bases, multi-character digits, and bounded conversions that report how far they got.</p>
+<div data-demo="bases"></div>
+
+<h2>Repeating in another base</h2>
+<p>Whether a fraction ends depends on the base. \(\tfrac1{10}\) ends in base 10 but repeats in base 2 (\(0.0\overline{0011}\)), while \(\tfrac13\) repeats in base 10 and ends in base 3 (\(0.1\)). The rule is the one from <a href="#rationals">Rationals</a> with 10 replaced by the base \(b\): in lowest terms \(p/q\) ends exactly when every prime factor of \(q\) divides \(b\), and otherwise the period is the order of \(b\) modulo the part of \(q\) that shares no factor with \(b\).</p>
+<pre><code>import { Rational, BaseSystem } from "@ratmath/core";
+
+const third = new Rational(1, 3);
+third.toRepeatingBase(BaseSystem.BINARY);           // "0.#01"
+third.toRepeatingBase(BaseSystem.TERNARY);          // "0.1"
+new Rational(1, 10).toRepeatingBaseWithPeriod(BaseSystem.BINARY);
+// { baseStr: "0.0#0011", period: 4, limitHit: false }
+third.toBase(BaseSystem.BINARY);                    // "1/11": numerator and denominator in base 2</code></pre>
+
+<h2>Digit alphabets</h2>
+<p>A <code>BaseSystem</code> is an ordered list of single-character digits; the first is worth 0. Presets cover the common bases (<code>BINARY</code>, <code>OCTAL</code>, <code>DECIMAL</code>, <code>DUODECIMAL</code>, <code>HEXADECIMAL</code>, <code>VIGESIMAL</code>, <code>BASE36</code>, <code>BASE60</code>, <code>BASE62</code>, <code>BASE64</code>), and <code>BaseSystem.fromBase(n)</code> uses <code>0-9a-zA-Z</code> for any base up to 62. Characters RatMath uses as notation (<code>+ - * / ^ ! ( ) [ ] : . # ~</code>) cannot be digits.</p>
+<pre><code>const abc = new BaseSystem("abc", "ABC digits");
+abc.fromDecimal(5n);                            // "bc", since 5 = 1·3 + 2
+BaseSystem.HEXADECIMAL.toDecimal("ff");         // 255n
+BaseSystem.fromBase(16).equals(BaseSystem.HEXADECIMAL);   // true</code></pre>
+<p>The letters <code>R</code> understands after <code>0</code> come from the prefix registry: <code>b</code> 2, <code>t</code> 3, <code>q</code> 4, <code>f</code> 5, <code>s</code> 7, <code>o</code> 8, <code>d</code> 12, <code>x</code> 16, <code>v</code> 20, <code>u</code> 36, <code>m</code> 60, <code>y</code> 64; <code>0z[n]</code> names any base. <code>BaseSystem.registerPrefix</code> adds your own.</p>
+
+<h2>Balanced, negative and bijective bases</h2>
+<p>Digits need not start at 0, and the radix need not be positive. In <em>balanced ternary</em> the digits are \(-1, 0, 1\) (written <code>T 0 1</code>) and every integer, negative or not, has one spelling with no sign:</p>
+\[ -5 = (-1)\cdot 3^2 + 1\cdot 3 + 1 = \texttt{T11}_{\,\text{bal}3}. \]
+<p>In <em>negabinary</em> (radix \(-2\)) the place values alternate in sign, \(1, -2, 4, -8, \ldots\), so again no minus sign is needed: \(-5 = 1 - 2 + 4 - 8 = \texttt{1111}_{-2}\).</p>
+<pre><code>const balanced = new BaseSystem("T01", "Balanced ternary", { radix: 3, digitOffset: -1 });
+const negabinary = new BaseSystem("01", "Negabinary", { radix: -2 });
+balanced.fromDecimal(-5n);       // "T11"
+negabinary.fromDecimal(-5n);     // "1111"</code></pre>
+<p>These <code>BaseSystem</code>s convert integers. For fractions in such bases, use <code>NumeralSystem</code>.</p>
+
+<h2>NumeralSystem: exact, bounded, explained</h2>
+<p><code>new NumeralSystem({ kind, radix, tokens })</code> supports four kinds: <code>ordinary</code>, <code>multiToken</code> (digits that are words), <code>balanced</code> and <code>negative</code>. <code>parse</code> returns an exact Rational; <code>format(q, { maxDigits })</code> expands with a work budget, and if the budget runs out it says so (<code>status: "budgetExhausted"</code>, <code>spelling: null</code>) rather than returning a rounded answer.</p>
+<pre><code>import { NumeralSystem, Rational } from "@ratmath/core";
+
+const words = new NumeralSystem({ kind: "multiToken", radix: 3, tokens: ["zero", "one", "two"] });
+words.parse("onezero.two").toString();          // "11/3"
+const bal = new NumeralSystem({ kind: "balanced", radix: 3, tokens: ["T", "0", "1"] });
+bal.format(new Rational(1, 2)).spelling;        // "1.#T": 1 − 1/3 − 1/9 − … = 1/2
+const dec = new NumeralSystem({ radix: 10, tokens: [..."0123456789"] });
+dec.format(new Rational(1, 97), { maxDigits: 3 }).status;   // "budgetExhausted"</code></pre>
+<p>Each step of an expansion is recorded with exact remainders (\(r_{\text{after}} = b\,r_{\text{before}} - d\)), <code>places(text)</code> lists each digit's exact weight and contribution, and <code>locale</code> converts to and from grouped forms such as <code>12 345,6#7</code>.</p>
+
+<template data-runbox>
+const q = new Rational(1, 10);
+for (const b of [2, 3, 5, 10, 12, 16]) {
+  PRINT(`1/10 in base ${b}:`.padEnd(18), q.toRepeatingBase(BaseSystem.fromBase(b)));
+}
+const bal = new NumeralSystem({ kind: "balanced", radix: 3, tokens: ["T", "0", "1"] });
+PRINT("-5 in balanced ternary:", bal.format(new Rational(-5)).spelling);
+bal.places("1T.1")
+</template>

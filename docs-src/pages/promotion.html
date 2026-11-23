@@ -1,0 +1,40 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>Types, promotion and JSON</h1>
+<p class="lede">Mixed arithmetic moves up a ladder, Integer → Rational → RationalInterval, and an exact result never moves down silently. Type guards, a JSON reviver and the <code>TypePromotion</code> helpers make the types easy to handle from outside.</p>
+<div data-demo="promotion"></div>
+
+<h2>The ladder</h2>
+\[ \text{Integer (level 0)} \;\longrightarrow\; \text{Rational (level 1)} \;\longrightarrow\; \text{RationalInterval (level 2)} \]
+<p>An operation on two values first raises the lower one to the higher level (an integer \(n\) becomes \(n/1\), a rational \(q\) becomes \([q, q]\)), then computes there. One exception keeps results tidy: dividing integers gives an Integer when the division is exact. The <code>R</code> template goes one step further and returns any whole Rational result as an Integer.</p>
+<pre><code>import { Integer, Rational, RationalInterval, TypePromotion } from "@ratmath/core";
+
+new Integer(2).add(new Rational(1, 3));            // Rational 7/3
+new Rational(1, 3).multiply(new RationalInterval(1, 2));   // RationalInterval 1/3:2/3
+new Integer(8).divide(new Integer(4));             // Integer 2
+TypePromotion.getTypeLevel(new Rational(1, 2));    // 1
+TypePromotion.promoteToCommonType(new Integer(1), new RationalInterval(2, 3));   // two intervals</code></pre>
+<p>Certified approximations sit beside the ladder: arithmetic with an Integer or Rational keeps a CertifiedApproximation, and an explicit operation with a RationalInterval gives an interval.</p>
+
+<h2>Type guards</h2>
+<p><code>isInteger</code>, <code>isRational</code>, <code>isRationalInterval</code>, <code>isRationalIntervalSet</code>, <code>isCertifiedApproximation</code>, <code>isFraction</code>, <code>isFractionInterval</code>, <code>isBaseSystem</code> and <code>isCoreNumber</code> work even when two copies of the library are loaded (where <code>instanceof</code> can fail).</p>
+
+<h2>JSON</h2>
+<p>Every value has a tagged <code>toJSON()</code>, so <code>JSON.stringify</code> keeps the exact parts as strings, and <code>reviveCoreValue</code> turns them back into values:</p>
+<pre><code>import { R, reviveCoreValue } from "@ratmath/core";
+
+const text = JSON.stringify({ x: R`1/3`, I: R`1:2` });
+// {"x":{"$ratmath":"Rational","numerator":"1","denominator":"3"},"I":{…}}
+const back = JSON.parse(text, reviveCoreValue);
+back.x.toString();       // "1/3"</code></pre>
+
+<template data-runbox>
+const pairs = [[new Integer(2), new Rational(1, 3)], [new Integer(8), new Integer(4)], [new Integer(8), new Integer(3)], [R`1/2`, R`1:2`]];
+for (const [a, b] of pairs) {
+  const r = a.divide(b);
+  PRINT(`${a} / ${b} =`, r, `(${r.constructor.name})`);
+}
+const text = JSON.stringify({ x: R`1/3`, I: R`1:2` });
+PRINT(text);
+JSON.parse(text, reviveCoreValue)
+</template>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Certified approximations · RatMath Core</title>
+<meta name="description" content="A guess plus an exact enclosure that is the real promise.">
+<link rel="canonical" href="https://ratmath.com/core/certified.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
+<link rel="stylesheet" href="assets/site.css?v=ef7058c1bc">
+</head>
+<body>
+<div class="shell">
+<aside>
+  <header class="brand"><a class="mark" href="index.html">RatMath <span>core</span></a><small>Exact numbers for JavaScript</small></header>
+  <select id="toc-select" aria-label="Page">
+    <option value="index.html">Overview</option>
+    <option value="reference.html">Reference</option>
+    <option value="explore.html">Explore</option>
+    <option value="integers.html">Integers</option>
+    <option value="rationals.html">Rationals</option>
+    <option value="continued-fractions.html">Continued fractions</option>
+    <option value="intervals.html">Intervals</option>
+    <option value="certified.html" selected>Certified approximations</option>
+    <option value="r-template.html">The R template</option>
+    <option value="chains.html">Chains and regions</option>
+    <option value="parsing.html">Number literals</option>
+    <option value="bases.html">Bases and numeral systems</option>
+    <option value="lists.html">Lists, sums and products</option>
+    <option value="fractions.html">Fractions and Stern–Brocot</option>
+    <option value="promotion.html">Types, promotion and JSON</option>
+  </select>
+  <nav class="toc" aria-label="Contents">
+    <a href="index.html">Overview</a>
+    <a href="reference.html">Reference</a>
+    <a href="explore.html">Explore</a>
+    <div class="group">Numbers</div>
+    <a href="integers.html">Integers</a>
+    <a href="rationals.html">Rationals</a>
+    <a href="continued-fractions.html">Continued fractions</a>
+    <a href="intervals.html">Intervals</a>
+    <a href="certified.html" class="on" aria-current="page">Certified approximations</a>
+    <div class="group">Writing numbers</div>
+    <a href="r-template.html">The R template</a>
+    <a href="chains.html">Chains and regions</a>
+    <a href="parsing.html">Number literals</a>
+    <a href="bases.html">Bases and numeral systems</a>
+    <div class="group">More</div>
+    <a href="lists.html">Lists, sums and products</a>
+    <a href="fractions.html">Fractions and Stern–Brocot</a>
+    <a href="promotion.html">Types, promotion and JSON</a>
+  </nav>
+  <p class="aside-foot"><a href="https://github.com/ratmath/core">GitHub</a> · <a href="https://www.npmjs.com/package/@ratmath/core">npm</a> · <a href="https://ratmath.com/">ratmath.com</a></p>
+</aside>
+<main>
+<section class="page" data-page="certified">
+<div class="eyebrow">Topic</div>
+<h1>Certified approximations</h1>
+<p class="lede">A <code>CertifiedApproximation</code> is one unknown number described two ways: a <em>candidate</em> for display, and an exact <em>enclosure</em>, a rational interval that is guaranteed to contain the true value. Only the enclosure is a promise.</p>
+
+<h2>Writing one: the <code>?</code></h2>
+<p>A <code>?</code> inside a decimal or continued fraction splits it: digits before the <code>?</code> are certain, digits after it are a guess. <code>23.456?789</code> says the true value starts <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>23.456</mn><mo>…</mo></mrow><annotation encoding="application/x-tex">23.456\ldots</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">23.456</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">…</span></span></span></span> (so lies in <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mn>23.456</mn><mo separator="true">,</mo><mn>23.457</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[23.456, 23.457]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">23.456</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">23.457</span><span class="mclose">]</span></span></span></span>) and that the best guess is <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>23.456789</mn></mrow><annotation encoding="application/x-tex">23.456789</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">23.456789</span></span></span></span>. A trailing <code>?</code> with no guess, as in <code>1.5?</code>, means the value is in <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mn>1.5</mn><mo separator="true">,</mo><mn>1.6</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[1.5, 1.6]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">1.5</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1.6</span><span class="mclose">]</span></span></span></span> and the candidate is <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.5</mn></mrow><annotation encoding="application/x-tex">1.5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1.5</span></span></span></span>.</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext mathvariant="monospace">23.456?789</mtext><mo>:</mo><mspace width="2em"/><mtext>candidate </mtext><mn>23.456789</mn><mo separator="true">,</mo><mspace width="2em"/><mtext>enclosure </mtext><mo stretchy="false">[</mo><mn>23.456</mn><mo separator="true">,</mo><mtext> </mtext><mn>23.457</mn><mo stretchy="false">]</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex"> \texttt{23.456?789}: \qquad \text{candidate } 23.456789, \qquad \text{enclosure } [23.456,\ 23.457]. </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6111em;"></span><span class="mord text"><span class="mord texttt">23.456?789</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">:</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">candidate </span></span><span class="mord">23.456789</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord text"><span class="mord">enclosure </span></span><span class="mopen">[</span><span class="mord">23.456</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">23.457</span><span class="mclose">]</span><span class="mord">.</span></span></span></span></span>
+<div data-demo="certified"></div>
+<pre><code>import { parseNumber } from "@ratmath/core";
+
+const reading = parseNumber("23.456?789");
+reading.candidate.toString();    // "23456789/1000000"
+reading.enclosure.toString();    // "2932/125:23457/1000"
+parseNumber("3.~7~15?").enclosure.toString();   // "333/106:355/113"
+parseNumber("23.456?789[+-12]");  // a narrower enclosure, inside the certified cell</code></pre>
+<p>For a continued fraction the certified prefix <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mn>3</mn><mo separator="true">;</mo><mn>7</mn><mo separator="true">,</mo><mn>15</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[3; 7, 15]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">3</span><span class="mpunct">;</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">7</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">15</span><span class="mclose">]</span></span></span></span> allows any continuation, so the value lies between <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="false"><mfrac><mn>333</mn><mn>106</mn></mfrac></mstyle></mrow><annotation encoding="application/x-tex">\tfrac{333}{106}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.1901em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">106</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">333</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span> (stop here) and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="false"><mfrac><mn>355</mn><mn>113</mn></mfrac></mstyle></mrow><annotation encoding="application/x-tex">\tfrac{355}{113}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.1901em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">113</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">355</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span> (continue with a 1, the largest step). A bracket after the guess narrows the enclosure, and is rejected if it leaves the certified cell.</p>
+
+<h2>Arithmetic</h2>
+<p>Operations act on both parts: candidates combine as numbers, enclosures combine by <a href="intervals.html">interval arithmetic</a>, so the result's enclosure again contains the true result. Two copies of the same reading know they are the same number: subtracting them gives exactly 0, which plain intervals cannot do.</p>
+<pre><code>const shifted = reading.add(parseNumber("0.5"));
+shifted.enclosure.toString();    // "5989/250:23957/1000"
+reading.subtract(reading.copy()).toString();   // "0"</code></pre>
+
+<h2>Comparisons that admit doubt</h2>
+<p>If two enclosures overlap, "is <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>&lt;</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">a &lt; b</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span></span></span></span>?" has no honest yes-or-no answer. <code>possibleRelations(a, b)</code> returns a bit mask of the relations that are still possible: <code>Relation.LESS</code>, <code>Relation.EQUAL</code>, <code>Relation.GREATER</code>. A single bit means the question is settled.</p>
+<pre><code>import { possibleRelations, Relation } from "@ratmath/core";
+
+const m = possibleRelations(parseNumber("2?"), parseNumber("2.5?"));
+(m &amp; Relation.LESS) !== 0;       // true: a could be less
+(m &amp; Relation.GREATER) !== 0;    // true: or greater, since [2, 3] and [2.5, 2.6] overlap</code></pre>
+
+<h2>Cutting an exact value to a budget</h2>
+<p><code>boundedDecimalApproximation(q, { fractionalDigits })</code> returns <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi></mrow><annotation encoding="application/x-tex">q</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span></span></span></span> itself when it fits in that many decimal places, and otherwise a certified prefix: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="false"><mfrac><mn>1</mn><mn>3</mn></mfrac></mstyle></mrow><annotation encoding="application/x-tex">\tfrac13</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.1901em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span> to 5 places is <code>0.33333?</code>. <code>boundedContinuedFractionApproximation(q, { maxTerms })</code> does the same with continued-fraction terms. Both keep the honest answer ("the value is in this interval") instead of a rounded one.</p>
+<pre><code>import { boundedDecimalApproximation, R } from "@ratmath/core";
+
+boundedDecimalApproximation(R`1/3`, { fractionalDigits: 5 }).toString();   // "0.33333?"
+boundedDecimalApproximation(R`1/8`, { fractionalDigits: 5 }).toString();   // "1/8", exact</code></pre>
+
+<h2>Saving and restoring</h2>
+<p><code>toString()</code> is parseable and keeps both parts. <code>JSON.stringify</code> uses the tagged <code>toJSON()</code>, which also keeps where the value came from; read it back with <code>JSON.parse(text, reviveCoreValue)</code>.</p>
+<section class="runbox" aria-label="Runnable code">
+  <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/core</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
+  <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">const a = parseNumber("3.14159?26");
+PRINT("candidate", a.candidate, " enclosure", a.enclosure);
+const b = R`22/7`;
+const m = possibleRelations(a, b);
+PRINT("a &lt; b possible:", (m &amp; Relation.LESS) !== 0, " a &gt; b possible:", (m &amp; Relation.GREATER) !== 0);
+PRINT("a * 2 =", a.multiply(R`2`));
+PRINT("1/3 to 8 places:", boundedDecimalApproximation(R`1/3`, { fractionalDigits: 8 }));
+a.subtract(a.copy())</textarea>
+  <div class="runbox-bar"><button type="button" data-run>Run</button><button type="button" class="ghost" data-reset>Reset</button><span class="runbox-meta">Ctrl/⌘ + Enter runs</span></div>
+  <div class="runbox-out" aria-live="polite"></div>
+</section>
+<nav class="pager" aria-label="Previous and next page"><a class="prev" href="intervals.html"><small>Previous</small>Intervals</a><a class="next" href="r-template.html"><small>Next</small>The R template</a></nav>
+</section>
+</main>
+</div>
+<script type="module" src="assets/pages.js?v=ef7058c1bc"></script>
+</body>
+</html>
