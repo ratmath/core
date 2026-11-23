@@ -5,7 +5,7 @@ and certified-approximation arithmetic for JavaScript. Values use `BigInt`,
 have no runtime dependencies, and work in Node and browser bundles.
 
 RatMath also includes a number-only parser for the exact literal formats used
-by RiX. It parses numbers, not arithmetic expressions.
+by [RiX](https://rix.ratmath.com/), the RatMath expression language. It parses numbers, not arithmetic expressions.
 
 ## Install
 
@@ -24,6 +24,7 @@ const half = new Rational(1, 2);
 const third = new Rational(1, 3);
 
 half.add(third).toString(); // "5/6"
+half.add(new Rational(1)).toString(); // "3/2"; half.add(1) throws: operands are Core values
 
 const uncertainty = new RationalInterval("1.2", "1.3");
 uncertainty.multiply(new Rational(2)).toString(); // "12/5:13/5"
@@ -91,6 +92,7 @@ R`0.#3 * 3`;                  // Integer 1
 R`2^-2 + 5!/3!`;              // Rational 81/4
 R`3.~7~15~1`;                 // continued fraction 355/113
 R`2.5_^-2`;                   // radix shift (RiX has no E notation): 1/40
+R`0t12_^2`;                   // in a base, shift by that base: ternary 12 × 3^2 = 45
 R`0xff.8 + 0b0.#01`;          // base prefixes: 511/2 + 1/3
 R.base(16)`ff.8 / 3`;         // unprefixed literals read in base 16: 511/6
 const x = new Rational(1, 3);
@@ -105,10 +107,16 @@ R`1.23[56:67] * 2`;           // uncertainty notation from parseNumber
 | decimals, repeating `#`, digit runs | `.5`, `0.#3`, `0.{3~4}1` | 1/2, 1/3, 33331/100000 |
 | uncertainty (colon only) | `1.2[3:6]`, `1.5[+-0.01]` | 1.23:1.26, 1.499:1.501 |
 | intervals | `2:5` | 2:5 |
-| continued fractions | `3.~7~15~1`, `~-1.~2` | 355/113, -1/2 |
-| radix shift | `1_^3`, `2.5_^-2` | 1000, 1/40 |
+| continued fractions | `3.~7~15~1`, `~-1.~2`, `-1.~2` | 355/113, -1/2, -3/2 |
+| radix shift (× base^k) | `1_^3`, `2.5_^-2`, `0t1_^10` | 1000, 1/40, 27 |
 | base prefixes | `0xff`, `0b0.#01`, `0o17`, `0z[7]66` | 255, 1/3, 15, 48 |
 | certified prefixes | `1.5?`, `3.~7?` | certified approximations |
+
+A plain leading `-` negates a whole continued fraction (`-3.~1~3` is
+-(3.~1~3) = -15/4); `~-` makes only the first term negative (`~-3.~1~3` is
+-3 + 1/(1 + 1/3) = -9/4). Every Core parser reads them this way, as RiX does.
+A radix shift `_^k` multiplies by the literal's base to the k, with k written
+in that base: `0t1_^10` is 3^3 and `0xff_^1` is 255 × 16.
 
 Operators, loosest first: `:` (interval), then `+ -`, then `* /`, then unary
 `-`, then `^` and `**` (right-associative, Integer exponent; `**` is the same
@@ -120,7 +128,11 @@ test returning a boolean: `` R`0:${x}:1` `` is `true` when x lies in [0, 1]
 (`` R.between`0:${x}:1` `` is the same test, typed `boolean` for TypeScript).
 In a chain, `:!` is a strict link (`` R`0:!${x}:1` `` means 0 < x ≤ 1), `_` is
 an unbounded end (`` R`_:${x}:1` `` means x ≤ 1; a chain with `_` reads
-ascending), and `||` joins chains. See the exact-expressions page.
+ascending), and `||` joins chains. See the
+[chains page](https://ratmath.com/core/chains.html).
+
+Interpolations may be Core values, bigints, safe integers or literal strings;
+inexact JS numbers such as `0.1` are rejected.
 
 ### Regions
 
@@ -136,8 +148,12 @@ even.match(R`5/2`);                // { n: 1 }
 even.breakpoints(0, 3);            // 0, 1, 2, 3
 even.within(0, 3);                 // RationalIntervalSet [0, 1) ∪ [2, 3)
 Region.parse("_:x:!-1 || 1:!x:_").contains(0); // false
-``` Interpolations may be Core values, bigints,
-safe integers or literal strings; inexact JS numbers such as `0.1` are rejected.
+```
+
+A region reads each chain ascending, `lo:x:hi`, so `8:x:2` is empty (a plain
+`R` chain also accepts descending order). An integer coefficient written next to
+the variable binds tighter than `/`: `1/2n` means 1/(2n), which is not affine in n
+and is refused; write `n/2` for half of n.
 
 ### Sums, products and ranges
 
@@ -174,7 +190,8 @@ exact(["1/2", "-3", 2n]).max();      // 2
 `add`, `subtract`, `multiply` and `divide` take a constant (Core value, bigint,
 safe integer or literal string) or a same-length list; `pow(n)`, `min()`,
 `max()`, `sum(fn?)` and `product(fn?)` complete the set. `exact(iterable)`
-wraps any list of exact inputs. JSON and `structuredClone` see a plain array.
+wraps any list of exact inputs. `JSON.stringify` sees a plain array of tagged
+Core values; `structuredClone` copies the array but not the Core values in it.
 
 ## Decimal interval notation
 
@@ -313,7 +330,7 @@ const value = parseRational("-9/4");
 value.toString();                  // "-9/4"
 value.toMixedString();             // "-2..1/4"
 value.toRepeatingDecimal();        // "-2.25#0"
-value.toContinuedFractionString(); // "-3.~1~3"
+value.toContinuedFractionString(); // "~-3.~1~3" (~ marks a negative first term)
 value.toContinuedFraction({ long: true }); // [-3n, 1n, 2n, 1n]
 
 const interval = parseInterval("1.23[+0.5:-0.6]");
@@ -401,14 +418,16 @@ balanced.fromDecimal(-5n); // "T11"
 ```
 
 These nonstandard systems support integers and exact numerator/denominator
-formatting. Repeating fractional expansions require an ordinary positional
+formatting. `BaseSystem.ROMAN` is not a place-value system: it reads and writes
+standard Roman numerals from 1 to 3999 (`fromDecimal(1994n)` is `"MCMXCIV"`,
+`toDecimal("xiv")` is `14n`; `IIII` and `IC` are refused), and
+``R.base(BaseSystem.ROMAN)`XIV + II` `` is 16. Repeating fractional expansions require an ordinary positional
 system; check `supportsPositionalFractions` before requesting one.
 
 ### Versioned numeral systems (since 0.6.0)
 
-Core 0.6.0 introduces `NumeralSystem`, `NUMERAL_SYSTEM_SCHEMA`, and
-`NUMERAL_LIMITS`. Use `@ratmath/core@^0.6.0` for these APIs; they are absent
-from 0.5.x.
+`NumeralSystem`, `NUMERAL_SYSTEM_SCHEMA`, and `NUMERAL_LIMITS` are available
+since Core 0.6.0.
 Unlike `BaseSystem`, `NumeralSystem` supports exact repeating fractional parsing
 and bounded expansion for ordinary, multi-token, balanced, and negative-base
 families. It does not implement bijective systems.

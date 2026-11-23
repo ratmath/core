@@ -201,14 +201,20 @@ function parseApproximation(input) {
   }
 
   const explicitCf = value.startsWith("~");
+  // A plain leading "-" negates a whole continued fraction: "-3.~7?" is -(3.~7?).
+  if (!explicitCf && /^[-+]\d(?:_?\d)*\.~/.test(value)) {
+    const positive = parseApproximation(value.slice(1));
+    return value[0] === "-" ? positive.negate() : positive;
+  }
   const cfValue = explicitCf ? value.slice(1) : value;
   const cf = cfValue.match(new RegExp(
-    `^([+-]?${DIGITS})\\.~(${DIGITS}(?:~${DIGITS})*)\\?(${DIGITS}(?:~${DIGITS})*)?$`,
+    `^([+-]?${DIGITS})\\.~((?:${DIGITS}(?:~${DIGITS})*)?)\\?(${DIGITS}(?:~${DIGITS})*)?$`,
   ));
   if (cf) {
     const certified = [
       BigInt(cleanDigits(cf[1], { signed: true })),
-      ...cf[2].split("~").map((term) => BigInt(cleanDigits(term))),
+      // "3.~?" certifies only the first term
+      ...(cf[2] ? cf[2].split("~").map((term) => BigInt(cleanDigits(term))) : []),
     ];
     const provisional = cf[3]
       ? cf[3].split("~").map((term) => BigInt(cleanDigits(term)))

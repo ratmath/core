@@ -1,7 +1,7 @@
 <!-- wide: no -->
 <div class="eyebrow">Reference</div>
 <h1>Everything in the library</h1>
-<p>Every item below is a named export of <code>@ratmath/core</code>; the default export is an object holding the same values. Inputs written <em>q</em> accept a safe integer <code>number</code>, a <code>bigint</code>, a string such as <code>"3/4"</code>, <code>"0.#3"</code> or <code>"1..1/2"</code>, or a Core value. Operations never return <code>NaN</code> or infinity: division by zero, <code>0^0</code>, an interval divisor containing 0 and malformed text throw an <code>Error</code>. The shipped <code>index.d.ts</code> has the exact TypeScript signatures.</p>
+<p>Every item below is a named export of <code>@ratmath/core</code>; the default export is an object holding the same values. Inputs written <em>q</em> accept a safe integer <code>number</code>, a <code>bigint</code>, a string such as <code>"3/4"</code>, <code>"0.#3"</code> or <code>"1..1/2"</code>, or a Core value. That applies to constructors and helper functions; the arithmetic methods (<code>add</code>, <code>multiply</code>, …) take Core values, so write <code>half.add(new Rational(1))</code> or <code>R`1/2 + 1`</code>, not <code>half.add(1)</code>. Operations never return <code>NaN</code> or infinity: division by zero, <code>0^0</code>, an interval divisor containing 0 and malformed text throw an <code>Error</code>. The shipped <code>index.d.ts</code> has the exact TypeScript signatures.</p>
 
 <h2>Values</h2>
 <div class="tablewrap"><table class="ref">

@@ -234,7 +234,7 @@ function matchChain(c, x) {
     // unbounded below: report the largest fitting n
     const f = floorQ(nhi.v);
     const n = nhi.strict && new Rational(f).compareTo(nhi.v) === 0 ? f - 1n : f;
-    return { n: Number(n) };
+    return { n: safeN(n) };
   }
   const f = floorQ(nlo.v);
   const onIt = new Rational(f).compareTo(nlo.v) === 0;
@@ -243,7 +243,14 @@ function matchChain(c, x) {
     const order = new Rational(n).compareTo(nhi.v);
     if (nhi.strict ? order >= 0 : order > 0) return null;
   }
-  return { n: Number(n) };
+  return { n: safeN(n) };
+}
+
+function safeN(n) {
+  if (n > BigInt(Number.MAX_SAFE_INTEGER) || n < -BigInt(Number.MAX_SAFE_INTEGER)) {
+    fail("the integer variable's value is beyond the safe integer range", RangeError);
+  }
+  return Number(n);
 }
 
 /** Integers n whose piece of chain c can meet [a, b]. */
@@ -344,21 +351,25 @@ export class Region {
     b = asPoint(b);
     const out = [];
     for (const c of this.alternatives) {
-      const ns = this.integer ? integerRange(c, a, b) : [null];
+      // A chain whose bounds do not use the integer variable is one piece.
+      const varying = (c.L && !isZero(c.L.c1)) || (c.U && !isZero(c.U.c1));
+      const ns = this.integer && varying ? integerRange(c, a, b) : [null];
       for (const n of ns) {
         const N = n === null ? ZERO : new Rational(BigInt(n));
         const lo = c.L ? c.L.c0.add(c.L.c1.multiply(N)) : null;
         const hi = c.U ? c.U.c0.add(c.U.c1.multiply(N)) : null;
         if (lo && hi && lo.compareTo(hi) > 0) continue;
-        if (lo && lo.compareTo(b) > 0) continue;
-        if (hi && hi.compareTo(a) < 0) continue;
+        if (lo && hi && lo.compareTo(hi) === 0 && (c.loStrict || c.hiStrict)) continue;
+        // skip pieces that miss [a, b], including a strict end sitting on the window's edge
+        if (lo && (c.loStrict ? lo.compareTo(b) >= 0 : lo.compareTo(b) > 0)) continue;
+        if (hi && (c.hiStrict ? hi.compareTo(a) <= 0 : hi.compareTo(a) < 0)) continue;
         out.push({ lo, hi, loStrict: c.loStrict, hiStrict: c.hiStrict, n });
       }
     }
     return out;
   }
 
-  /** Every finite endpoint of the region's pieces inside [a, b]. */
+  /** Every finite endpoint of the region's pieces inside [a, b], ascending, without repeats. */
   breakpoints(a, b) {
     a = asPoint(a);
     b = asPoint(b);
@@ -366,7 +377,8 @@ export class Region {
     for (const r of this.intervals(a, b)) {
       for (const p of [r.lo, r.hi]) if (p && p.compareTo(a) >= 0 && p.compareTo(b) <= 0) points.push(p);
     }
-    return points;
+    points.sort((p, q) => p.compareTo(q));
+    return points.filter((p, i) => i === 0 || p.compareTo(points[i - 1]) !== 0);
   }
 
   /** The region inside the closed window [a, b], as a RationalIntervalSet. */

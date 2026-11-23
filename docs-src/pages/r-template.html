@@ -13,11 +13,11 @@
   <tr><td>uncertainty</td><td><code>1.2[3:6]</code>, <code>1.5[+-0.01]</code></td><td>\([1.23, 1.26]\), \([1.499, 1.501]\)</td></tr>
   <tr><td>interval</td><td><code>2:5</code></td><td>\([2, 5]\)</td></tr>
   <tr><td>continued fraction</td><td><code>3.~7~15~1</code>, <code>~-1.~2</code></td><td>\(\tfrac{355}{113}\), \(-\tfrac12\)</td></tr>
-  <tr><td>radix shift</td><td><code>1_^3</code>, <code>2.5_^-2</code></td><td>\(1000\), \(\tfrac1{40}\)</td></tr>
+  <tr><td>radix shift</td><td><code>1_^3</code>, <code>2.5_^-2</code>, <code>0t1_^10</code></td><td>\(1000\), \(\tfrac1{40}\), \(27\)</td></tr>
   <tr><td>base prefix</td><td><code>0xff.8</code>, <code>0b0.#01</code>, <code>0z[7]66</code></td><td>\(\tfrac{511}2\), \(\tfrac13\), \(48\)</td></tr>
   <tr><td>certified</td><td><code>1.5?</code>, <code>3.~7?</code></td><td>a <a href="#certified">CertifiedApproximation</a></td></tr>
 </table></div>
-<p>A radix shift belongs to the literal before it: <code>1/2_^3</code> is \(1/(2 \cdot 10^3)\). A leading <code>-</code> is negation, so <code>-3.~7</code> is \(-(3 + \tfrac17)\); write <code>~-3.~7</code> for a negative first term. There is no <code>E</code> notation (use <code>_^</code>).</p>
+<p>A radix shift belongs to the literal before it: <code>1/2_^3</code> is \(1/(2 \cdot 10^3)\). A leading <code>-</code> is negation, so <code>-3.~7</code> is \(-(3 + \tfrac17)\); write <code>~-3.~7</code> for a negative first term (see <a href="#continued-fractions">continued fractions</a>). There is no <code>E</code> notation (use <code>_^</code>). The shift is by the literal's own base, with the exponent written in that base: <code>1_^3</code> is \(10^3\), <code>0t1_^10</code> is \(3^3 = 27\) (ternary 10 is 3), <code>0xff_^1</code> is \(255 \cdot 16\), and under <code>R.base(16)</code> <code>1_^a</code> is \(16^{10}\).</p>
 
 <h2>Operators</h2>
 <p>From loosest to tightest: a spaced <code>:</code>; <code>+ -</code>; <code>* /</code>; unary <code>-</code>; <code>^</code> and <code>**</code> (the same power, right-associative, integer exponents); postfix <code>!</code> and <code>!!</code>. So <code>-2^2</code> is \(-4\) and <code>2^3^2</code> is \(2^9\). A whole Rational result comes back as an <code>Integer</code>: <code>R`0.#3 * 3`</code> is the Integer 1.</p>

@@ -49,6 +49,7 @@ export function reviveCoreValue(_key, value) {
     case "FractionInterval":
       return new FractionInterval(value.low, value.high);
     case "BaseSystem":
+      if (value.kind === "roman") return BaseSystem.ROMAN;
       return new BaseSystem(value.characters, value.name, {
         radix: value.radix,
         digitOffset: value.digitOffset,

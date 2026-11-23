@@ -483,9 +483,10 @@ export function boundedContinuedFractionApproximation(value, options = {}) {
   const extended = rational.toContinuedFraction({ maxTerms: maxTerms + 1 });
   if (extended.length <= maxTerms) return exactScalar(rational);
   const [first, ...tail] = coefficients;
+  const sign = first < 0n ? "~" : ""; // ~-4.~? : a negative first term, as R reads it
   const original = tail.length
-    ? `${first}.~${tail.join("~")}?`
-    : `${first}.~?`;
+    ? `${sign}${first}.~${tail.join("~")}?`
+    : `${sign}${first}.~?`;
   return certifiedContinuedFractionPrefix({
     coefficients,
     original,

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/site.css?v=90f125101d">
+<link rel="stylesheet" href="assets/site.css?v=9550585b08">
 </head>
 <body>
 <div class="shell">
@@ -68,7 +68,7 @@
 
 const third = new Rational(1, 3);
 third.toRepeatingBase(BaseSystem.BINARY);           // "0.#01"
-third.toRepeatingBase(BaseSystem.TERNARY);          // "0.1"
+third.toRepeatingBase(BaseSystem.TERNARY);          // "0.1#0" (#0: it terminates)
 new Rational(1, 10).toRepeatingBaseWithPeriod(BaseSystem.BINARY);
 // { baseStr: "0.0#0011", period: 4, limitHit: false }
 third.toBase(BaseSystem.BINARY);                    // "1/11": numerator and denominator in base 2</code></pre>
@@ -90,6 +90,13 @@ const negabinary = new BaseSystem("01", "Negabinary", { radix: -2 });
 balanced.fromDecimal(-5n);       // "T11"
 negabinary.fromDecimal(-5n);     // "1111"</code></pre>
 <p>These <code>BaseSystem</code>s convert integers. For fractions in such bases, use <code>NumeralSystem</code>.</p>
+
+<h2>Roman numerals</h2>
+<p><code>BaseSystem.ROMAN</code> is not a place-value base: a symbol's worth does not depend on its position, except that a smaller symbol written before a larger one is subtracted (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="monospace">IV</mtext><mo>=</mo><mn>5</mn><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\texttt{IV} = 5 - 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6111em;"></span><span class="mord text"><span class="mord texttt">IV</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="monospace">XC</mtext><mo>=</mo><mn>100</mn><mo>−</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">\texttt{XC} = 100 - 10</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6111em;"></span><span class="mord text"><span class="mord texttt">XC</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">100</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">10</span></span></span></span>). It reads and writes the standard form for 1 to 3999, accepts lower case, and refuses spellings like <code>IIII</code>, <code>IC</code> or <code>VX</code>. There is no zero and no fractional digits, so a fraction comes out as a ratio of numerals.</p>
+<pre><code>BaseSystem.ROMAN.fromDecimal(1994n);         // "MCMXCIV" = 1000 + (1000 − 100) + (100 − 10) + (5 − 1)
+BaseSystem.ROMAN.toDecimal("xiv");           // 14n
+new Rational(3, 4).toBase(BaseSystem.ROMAN); // "III/IV"
+R.base(BaseSystem.ROMAN)`XIV + II`;          // 16</code></pre>
 
 <h2>NumeralSystem: exact, bounded, explained</h2>
 <p><code>new NumeralSystem({ kind, radix, tokens })</code> supports four kinds: <code>ordinary</code>, <code>multiToken</code> (digits that are words), <code>balanced</code> and <code>negative</code>. <code>parse</code> returns an exact Rational; <code>format(q, { maxDigits })</code> expands with a work budget, and if the budget runs out it says so (<code>status: "budgetExhausted"</code>, <code>spelling: null</code>) rather than returning a rounded answer.</p>
@@ -118,6 +125,6 @@ bal.places("1T.1")</textarea>
 </section>
 </main>
 </div>
-<script type="module" src="assets/pages.js?v=90f125101d"></script>
+<script type="module" src="assets/pages.js?v=9550585b08"></script>
 </body>
 </html>

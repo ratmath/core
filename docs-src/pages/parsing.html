@@ -36,7 +36,9 @@ parseMixedNumber("2..1/4").toString();         // "9/4"
 parseMixedNumber("-2..1/4").toString();        // "-9/4": the sign covers the whole value
 parseContinuedFraction("3.~7~15").toString();  // "333/106"
 parseContinuedFraction([3n, 7n, 15n]).toString();   // "333/106"
-parseContinuedFraction("~-3.~1~3").toString(); // "-9/4": ~ before a negative first term</code></pre>
+parseContinuedFraction("~-3.~1~3").toString(); // "-9/4": ~ before a negative first term
+parseContinuedFraction("-3.~1~3").toString();  // "-15/4": a plain - negates the whole value</code></pre>
+<p>The sign rule for continued fractions is explained on the <a href="#continued-fractions">continued fractions page</a>.</p>
 
 <h2>Intervals and uncertainty</h2>
 <p>A colon joins two scalar ends. Brackets after a decimal give shorter forms:</p>
