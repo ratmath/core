@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chains and regions · RatMath Core</title>
+<meta name="description" content="Betweenness tests, strict links, unbounded ends, unions and Region.">
+<link rel="canonical" href="https://ratmath.com/core/chains.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
+<link rel="stylesheet" href="assets/site.css?v=90f125101d">
+</head>
+<body>
+<div class="shell">
+<aside>
+  <header class="brand"><a class="mark" href="index.html">RatMath <span>core</span></a><small>Exact numbers for JavaScript</small></header>
+  <select id="toc-select" aria-label="Page">
+    <option value="index.html">Overview</option>
+    <option value="reference.html">Reference</option>
+    <option value="explore.html">Explore</option>
+    <option value="integers.html">Integers</option>
+    <option value="rationals.html">Rationals</option>
+    <option value="continued-fractions.html">Continued fractions</option>
+    <option value="intervals.html">Intervals</option>
+    <option value="certified.html">Certified approximations</option>
+    <option value="r-template.html">The R template</option>
+    <option value="chains.html" selected>Chains and regions</option>
+    <option value="parsing.html">Number literals</option>
+    <option value="bases.html">Bases and numeral systems</option>
+    <option value="lists.html">Lists, sums and products</option>
+    <option value="fractions.html">Fractions and Stern–Brocot</option>
+    <option value="promotion.html">Types, promotion and JSON</option>
+  </select>
+  <nav class="toc" aria-label="Contents">
+    <a href="index.html">Overview</a>
+    <a href="reference.html">Reference</a>
+    <a href="explore.html">Explore</a>
+    <div class="group">Numbers</div>
+    <a href="integers.html">Integers</a>
+    <a href="rationals.html">Rationals</a>
+    <a href="continued-fractions.html">Continued fractions</a>
+    <a href="intervals.html">Intervals</a>
+    <a href="certified.html">Certified approximations</a>
+    <div class="group">Writing numbers</div>
+    <a href="r-template.html">The R template</a>
+    <a href="chains.html" class="on" aria-current="page">Chains and regions</a>
+    <a href="parsing.html">Number literals</a>
+    <a href="bases.html">Bases and numeral systems</a>
+    <div class="group">More</div>
+    <a href="lists.html">Lists, sums and products</a>
+    <a href="fractions.html">Fractions and Stern–Brocot</a>
+    <a href="promotion.html">Types, promotion and JSON</a>
+  </nav>
+  <p class="aside-foot"><a href="https://github.com/ratmath/core">GitHub</a> · <a href="https://www.npmjs.com/package/@ratmath/core">npm</a> · <a href="https://ratmath.com/">ratmath.com</a></p>
+</aside>
+<main>
+<section class="page" data-page="chains">
+<div class="eyebrow">Topic</div>
+<h1>Chains and regions</h1>
+<p class="lede">Three or more values joined by colons are a betweenness test: <code>R`0:${x}:1`</code> is true when <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>≤</mo><mi>x</mi><mo>≤</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0 \le x \le 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7804em;vertical-align:-0.136em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>. Since 0.9.0 a chain can have strict links (<code>:!</code>), open ends (<code>_</code>) and alternatives (<code>||</code>), and <code>Region</code> reads the same text as a set.</p>
+
+<h2>Betweenness</h2>
+<p>A chain holds when its values run in one direction, ascending or descending, with ties allowed. An interval operand counts with both its ends, so <code>0:(1/4:1/2):1</code> asks that the whole interval lie inside <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mn>0</mn><mo separator="true">,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0, 1]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1</span><span class="mclose">]</span></span></span></span>.</p>
+<pre><code>import { R } from "@ratmath/core";
+
+const x = R`1/3`;
+R`0:${x}:1`;           // true:  0 ≤ x ≤ 1
+R`1:3:2`;              // false: 3 is not between 1 and 2
+R`3:2:1`;              // true:  descending counts too
+R`0:(1/4:1/2):1`;      // true:  both ends of the interval are inside</code></pre>
+<p>A chain is a test, not a number: <code>R`(1:2:3) + 1`</code> throws a <code>TypeError</code>. In TypeScript, use <code>R.between`…`</code>, which is typed as <code>boolean</code> and throws if its text is not a chain.</p>
+
+<h2>Strict links, open ends, unions</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>chain</th><th>means</th></tr>
+  <tr><td>2:!x:8</td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>&lt;</mo><mi>x</mi><mo>≤</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">2 &lt; x \le 8</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6835em;vertical-align:-0.0391em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">8</span></span></span></span>: <code>:!</code> forbids a tie across that link</td></tr>
+  <tr><td>2:x:!8</td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>≤</mo><mi>x</mi><mo>&lt;</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">2 \le x &lt; 8</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7804em;vertical-align:-0.136em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">8</span></span></span></span></td></tr>
+  <tr><td>_:x:8</td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>≤</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">x \le 8</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">8</span></span></span></span>: <code>_</code> beside a colon is an unbounded end</td></tr>
+  <tr><td>2:x:_</td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>≥</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">x \ge 2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span></td></tr>
+  <tr><td>_:x:!-1 || 1:!x:_</td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>&lt;</mo><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x &lt; -1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord">1</span></span></span></span> or <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>&gt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x &gt; 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>: <code>||</code> joins chains</td></tr>
+</table></div>
+<p>A chain with <code>_</code> always reads ascending (otherwise <code>_:x:8</code> would hold for every <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span>). <code>_</code> anywhere else throws, as do two-value forms such as <code>_:5</code> or <code>2:!5</code>, which have no middle value to test.</p>
+<pre><code>const x = R`5`;
+R`2:!${x}:8`;                   // true
+R`_:${x}:!5`;                   // false: x &lt; 5 fails
+R`_:${x}:!-1 || 1:!${x}:_`;     // true</code></pre>
+
+<h2>Regions: chains as sets</h2>
+<p><code>R.region</code> and <code>Region.parse</code> read a chain on a named variable as a set of rationals, without a value for it. One other name in the bounds may be an <em>integer</em> variable, provided each bound is affine in it (like <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>n</mi></mrow><annotation encoding="application/x-tex">2n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2</span><span class="mord mathnormal">n</span></span></span></span> or <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo stretchy="false">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">3(n - 1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">3</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span>); the region is then the union over all integers <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span>:</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext mathvariant="monospace">2n:x:!2n+1</mtext><mtext>  </mtext><mo>=</mo><mtext>  </mtext><munder><mo>⋃</mo><mrow><mi>n</mi><mo>∈</mo><mi mathvariant="double-struck">Z</mi></mrow></munder><mtext> </mtext><mo stretchy="false">[</mo><mn>2</mn><mi>n</mi><mo separator="true">,</mo><mtext> </mtext><mn>2</mn><mi>n</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mtext>  </mtext><mo>=</mo><mtext>  </mtext><mo>⋯</mo><mo>∪</mo><mo stretchy="false">[</mo><mo>−</mo><mn>2</mn><mo separator="true">,</mo><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>∪</mo><mo stretchy="false">[</mo><mn>0</mn><mo separator="true">,</mo><mn>1</mn><mo stretchy="false">)</mo><mo>∪</mo><mo stretchy="false">[</mo><mn>2</mn><mo separator="true">,</mo><mn>3</mn><mo stretchy="false">)</mo><mo>∪</mo><mo>⋯</mo></mrow><annotation encoding="application/x-tex"> \texttt{2n:x:!2n+1} \;=\; \bigcup_{n \in \mathbb Z}\, [2n,\ 2n+1) \;=\; \cdots \cup [-2, -1) \cup [0, 1) \cup [2, 3) \cup \cdots </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6111em;"></span><span class="mord text"><span class="mord texttt">2n:x:!2n+1</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.3756em;vertical-align:-1.3256em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8518em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">∈</span><span class="mord mathbb mtight">Z</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">⋃</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3256em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">[</span><span class="mord">2</span><span class="mord mathnormal">n</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">2</span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.5556em;"></span><span class="minner">⋯</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">−</span><span class="mord">2</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">−</span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">2</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">3</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.313em;"></span><span class="minner">⋯</span></span></span></span></span>
+<div data-demo="chains"></div>
+<pre><code>import { R, Region } from "@ratmath/core";
+
+const squares = R.region`2n:x:!2n+1`;   // 2n ≤ x &lt; 2n+1 for some integer n
+squares.contains(R`1/2`);              // true
+squares.match(R`5/2`);                 // { n: 1 }: which n put it there
+squares.within(0, 3).toString();       // "[0,1) U [2,3)"
+squares.breakpoints(0, 3);             // [0, 1, 2, 3]
+Region.parse("a:x:b", { params: { a: 1, b: "5/2" } }).contains(R`2`);   // true</code></pre>
+<p><code>intervals(lo, hi)</code> lists the pieces in a window, each <code>{ lo, hi, loStrict, hiStrict, n }</code> (<code>null</code> for an unbounded end), and <code>within(lo, hi)</code> returns them as a <a href="intervals.html#sets">RationalIntervalSet</a>. Bounds may use <code>+ - * /</code>, integer powers, parentheses and juxtaposition (<code>2n</code>). This is what <a href="https://ratmath.com/analytic/">@ratmath/analytic</a> uses for piecewise functions like <code>x^2 if 0:x:!1; 1 otherwise</code>.</p>
+<section class="runbox" aria-label="Runnable code">
+  <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/core</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
+  <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">const x = R`3/2`;
+PRINT("0 ≤ x ≤ 1:", R`0:${x}:1`, "   1 &lt; x &lt; 2:", R`1:!${x}:!2`);
+PRINT("|x| &gt; 1:", R`_:${x}:!-1 || 1:!${x}:_`);
+
+const r = R.region`3n-1:!x:!3n+1`;
+for (const v of [R`0`, R`1`, R`5/2`, R`3`]) PRINT(v, "→", r.match(v));
+r.within(-2, 7)</textarea>
+  <div class="runbox-bar"><button type="button" data-run>Run</button><button type="button" class="ghost" data-reset>Reset</button><span class="runbox-meta">Ctrl/⌘ + Enter runs</span></div>
+  <div class="runbox-out" aria-live="polite"></div>
+</section>
+<nav class="pager" aria-label="Previous and next page"><a class="prev" href="r-template.html"><small>Previous</small>The R template</a><a class="next" href="parsing.html"><small>Next</small>Number literals</a></nav>
+</section>
+</main>
+</div>
+<script type="module" src="assets/pages.js?v=90f125101d"></script>
+</body>
+</html>

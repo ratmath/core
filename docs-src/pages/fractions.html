@@ -1,0 +1,58 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>Fractions and the Stern–Brocot tree</h1>
+<p class="lede"><code>Fraction</code> keeps the numerator and denominator you wrote: \(\tfrac24\) stays \(\tfrac24\). That matters for mediants, Farey sequences and the Stern–Brocot tree, where the components, not just the value, carry the structure.</p>
+
+<h2>Representation, not just value</h2>
+<pre><code>import { Fraction, Rational } from "@ratmath/core";
+
+const half = new Fraction(1, 2);
+const twoFourths = new Fraction("2/4");
+half.equals(twoFourths);                 // false: different components
+half.lessThan(twoFourths);               // false, and neither is greater: same value
+twoFourths.reduce().toString();          // "1/2"
+new Fraction(1, 2).divide(new Fraction(3, 4)).toString();   // "4/6", no cancelling
+new Fraction(1, 4).add(new Fraction(2, 4)).toString();      // "3/4" (denominators must match)</code></pre>
+<p>With <code>{ allowInfinite: true }</code> a nonzero \(a/0\) is a signed infinity; \(\tfrac{-1}{0}\) and \(\tfrac{1}{0}\) are the outer ends of the tree. \(\tfrac00\) is always rejected.</p>
+
+<h2>Mediants</h2>
+<p>The mediant of \(\tfrac ab\) and \(\tfrac cd\) adds the parts:</p>
+\[ \frac ab \oplus \frac cd = \frac{a + c}{b + d}, \qquad \frac ab &lt; \frac{a+c}{b+d} &lt; \frac cd \ \text{ when } \frac ab &lt; \frac cd \text{ and } b, d &gt; 0. \]
+<p>It always lies strictly between the two, and if the pair is <em>Farey neighbours</em>, meaning \(bc - ad = 1\), then the mediant is the fraction with the smallest denominator between them, and it is a neighbour of each. <code>fareyParents()</code> runs this backwards: the unique neighbours whose mediant is the given fraction.</p>
+<div data-demo="mediants"></div>
+<pre><code>const left = new Fraction(1, 3), right = new Fraction(1, 2);
+const mid = left.mediant(right);                  // 2/5
+Fraction.isFareyTriple(left, mid, right);         // true
+const p = new Fraction(3, 5).fareyParents();      // { left: 1/2, right: 2/3 }</code></pre>
+
+<h2>The Stern–Brocot tree</h2>
+<p>Start with the ends \(\tfrac{-1}{0}\) and \(\tfrac10\) and the root \(\tfrac01\). Each fraction's children are the mediants with its nearest ancestors on each side. Every rational appears exactly once, already in lowest terms, so a fraction is named by its path of left (L) and right (R) steps from the root.</p>
+<div data-demo="sternbrocot"></div>
+<p>The path is the <a href="#continued-fractions">continued fraction</a> in disguise: the runs of L and R have lengths \(a_0, a_1, a_2, \ldots\) (with the last run one shorter). For \(\tfrac35 = [0; 1, 1, 2]\) the path from 0 is <code>RLRL</code>.</p>
+<pre><code>const v = new Fraction(3, 5);
+v.sternBrocotPath();                          // ["R", "L", "R", "L"]
+Fraction.fromSternBrocotPath(["R", "L", "R", "L"]).toString();   // "3/5"
+v.sternBrocotDepth();                         // 4
+v.sternBrocotParent().toString();             // "2/3"
+v.sternBrocotChildren();                      // { left: 4/7, right: 5/8 }</code></pre>
+
+<h2>FractionInterval: splitting by mediants</h2>
+<p>A <code>FractionInterval</code> keeps unreduced ends, so repeated mediant splits stay on the tree's own fractions: <code>partitionWithMediants(depth)</code> splits every piece \(2^{\text{depth}}\) ways. <code>partitionWith(fn)</code> splits at whatever <code>Fraction</code>s a function returns.</p>
+<pre><code>import { FractionInterval } from "@ratmath/core";
+
+const I = new FractionInterval(new Fraction(1, 3), new Fraction(2, 3));
+I.partitionWithMediants(2).map(String);   // ["1/3:4/9", "4/9:3/6", "3/6:5/9", "5/9:2/3"]</code></pre>
+
+<template data-runbox>
+// Walk down the tree towards a target by mediants, printing each step.
+const target = R`0.6180339887`;
+let lo = new Fraction(0, 1), hi = new Fraction(1, 0, { allowInfinite: true }), path = "";
+for (let i = 0; i < 12; i++) {
+  const m = lo.mediant(hi);
+  const goRight = m.toRational().lessThan(target);
+  path += goRight ? "R" : "L";
+  if (goRight) lo = m; else hi = m;
+  PRINT(path.padEnd(13), m);
+}
+target.convergents({ maxCount: 8 })
+</template>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reference · RatMath Core</title>
+<meta name="description" content="Every export of @ratmath/core with its signature.">
+<link rel="canonical" href="https://ratmath.com/core/reference.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
+<link rel="stylesheet" href="assets/site.css?v=90f125101d">
+</head>
+<body>
+<div class="shell">
+<aside>
+  <header class="brand"><a class="mark" href="index.html">RatMath <span>core</span></a><small>Exact numbers for JavaScript</small></header>
+  <select id="toc-select" aria-label="Page">
+    <option value="index.html">Overview</option>
+    <option value="reference.html" selected>Reference</option>
+    <option value="explore.html">Explore</option>
+    <option value="integers.html">Integers</option>
+    <option value="rationals.html">Rationals</option>
+    <option value="continued-fractions.html">Continued fractions</option>
+    <option value="intervals.html">Intervals</option>
+    <option value="certified.html">Certified approximations</option>
+    <option value="r-template.html">The R template</option>
+    <option value="chains.html">Chains and regions</option>
+    <option value="parsing.html">Number literals</option>
+    <option value="bases.html">Bases and numeral systems</option>
+    <option value="lists.html">Lists, sums and products</option>
+    <option value="fractions.html">Fractions and Stern–Brocot</option>
+    <option value="promotion.html">Types, promotion and JSON</option>
+  </select>
+  <nav class="toc" aria-label="Contents">
+    <a href="index.html">Overview</a>
+    <a href="reference.html" class="on" aria-current="page">Reference</a>
+    <a href="explore.html">Explore</a>
+    <div class="group">Numbers</div>
+    <a href="integers.html">Integers</a>
+    <a href="rationals.html">Rationals</a>
+    <a href="continued-fractions.html">Continued fractions</a>
+    <a href="intervals.html">Intervals</a>
+    <a href="certified.html">Certified approximations</a>
+    <div class="group">Writing numbers</div>
+    <a href="r-template.html">The R template</a>
+    <a href="chains.html">Chains and regions</a>
+    <a href="parsing.html">Number literals</a>
+    <a href="bases.html">Bases and numeral systems</a>
+    <div class="group">More</div>
+    <a href="lists.html">Lists, sums and products</a>
+    <a href="fractions.html">Fractions and Stern–Brocot</a>
+    <a href="promotion.html">Types, promotion and JSON</a>
+  </nav>
+  <p class="aside-foot"><a href="https://github.com/ratmath/core">GitHub</a> · <a href="https://www.npmjs.com/package/@ratmath/core">npm</a> · <a href="https://ratmath.com/">ratmath.com</a></p>
+</aside>
+<main>
+<section class="page" data-page="reference">
+<div class="eyebrow">Reference</div>
+<h1>Everything in the library</h1>
+<p>Every item below is a named export of <code>@ratmath/core</code>; the default export is an object holding the same values. Inputs written <em>q</em> accept a safe integer <code>number</code>, a <code>bigint</code>, a string such as <code>"3/4"</code>, <code>"0.#3"</code> or <code>"1..1/2"</code>, or a Core value. Operations never return <code>NaN</code> or infinity: division by zero, <code>0^0</code>, an interval divisor containing 0 and malformed text throw an <code>Error</code>. The shipped <code>index.d.ts</code> has the exact TypeScript signatures.</p>
+
+<h2>Values</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>class</th><th>construct</th><th>notes</th></tr>
+  <tr><td>Integer</td><td><code>new Integer(n)</code>, <code>Integer.from(n)</code>, <code>Integer.fromRational(q)</code></td><td>n: safe integer, bigint, decimal string or Integer; <code>.value</code> is the bigint</td></tr>
+  <tr><td>Rational</td><td><code>new Rational(p, q = 1)</code>, <code>Rational.from(q)</code></td><td>always lowest terms, positive denominator; <code>.numerator</code>, <code>.denominator</code> are bigints; a string argument may be any literal (a second argument divides it)</td></tr>
+  <tr><td>RationalInterval</td><td><code>new RationalInterval(a, b)</code>, <code>RationalInterval.point(q)</code>, <code>.fromString("a:b")</code></td><td>closed; <code>start</code>/<code>end</code> keep the written order, <code>low</code>/<code>high</code> are sorted</td></tr>
+  <tr><td>RationalIntervalSet</td><td><code>new RationalIntervalSet(components)</code>, <code>.point(q)</code>, <code>.fromInterval(I)</code></td><td>finite unions with open, closed or unbounded ends</td></tr>
+  <tr><td>CertifiedApproximation</td><td><code>new CertifiedApproximation(candidate, enclosure, options?)</code></td><td>usually made by parsing <code>"1.5?"</code>; the enclosure is the guarantee</td></tr>
+  <tr><td>Fraction</td><td><code>new Fraction(p, q = 1, { allowInfinite })</code></td><td>not reduced; <code>a/0</code> allowed as ±infinity with the option</td></tr>
+  <tr><td>FractionInterval</td><td><code>new FractionInterval(lowFraction, highFraction)</code></td><td>mediant splitting that keeps unreduced ends</td></tr>
+  <tr><td>Region</td><td><code>Region.parse(text, { params, variable })</code>, <code>R.region`…`</code></td><td>sets of rationals from chains; see <a href="chains.html">Chains</a></td></tr>
+  <tr><td>BaseSystem</td><td><code>new BaseSystem(digits, name?, { radix, digitOffset, allowReserved })</code></td><td>presets <code>BINARY</code> … <code>BASE64</code>, <code>fromBase(n)</code>, prefix registry</td></tr>
+  <tr><td>NumeralSystem</td><td><code>new NumeralSystem({ kind, radix, tokens })</code></td><td>kinds <code>ordinary</code>, <code>multiToken</code>, <code>balanced</code>, <code>negative</code></td></tr>
+  <tr><td>TypePromotion</td><td>static methods only</td><td>Integer → Rational → RationalInterval dispatch</td></tr>
+</table></div>
+
+<h2>Integer</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>method</th><th>result</th></tr>
+  <tr><td>add, subtract, multiply</td><td>Integer, or a promoted type for a Rational or interval operand</td></tr>
+  <tr><td>divide(b)</td><td>Integer when exact, else Rational</td></tr>
+  <tr><td>floorDivide, floorModulo, divmod</td><td>floor quotient, remainder with the sign of the divisor, <code>[q, r]</code></td></tr>
+  <tr><td>modulo(b)</td><td>remainder with the sign of a (BigInt <code>%</code>)</td></tr>
+  <tr><td>pow(n), E(k)</td><td>power (negative n gives a Rational), times <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>10</mn><mi>k</mi></msup></mrow><annotation encoding="application/x-tex">10^k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8491em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span></span></span></span></span></span></span></span></td></tr>
+  <tr><td>gcd, lcm, factorial, doubleFactorial, bitLength</td><td>number theory</td></tr>
+  <tr><td>abs, negate, sign, isZero, isEven, isOdd, isPositive, isNegative</td><td>sign and parity</td></tr>
+  <tr><td>equals, compareTo, lessThan, lessThanOrEqual, greaterThan, greaterThanOrEqual</td><td>comparisons (accept Rationals too)</td></tr>
+  <tr><td>toString(radix?), toBase(system), toNumber(), toRational()</td><td>conversions</td></tr>
+</table></div>
+
+<h2>Rational</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>method</th><th>result</th></tr>
+  <tr><td>add, subtract, multiply, divide</td><td>exact; an interval operand gives a RationalInterval</td></tr>
+  <tr><td>negate, reciprocal, abs, pow(n), E(k)</td><td>exact</td></tr>
+  <tr><td>floor(), ceil(), trunc(), round(mode?), roundTo(places, mode?)</td><td>bigints (roundTo gives a Rational); modes <code>half-even</code>, <code>half-up</code>, <code>toward-zero</code>, <code>floor</code>, <code>ceil</code></td></tr>
+  <tr><td>toString(), toMixedString(), toDecimal(digits?), toNumber()</td><td><code>"-9/4"</code>, <code>"-2..1/4"</code>, display decimal, a float</td></tr>
+  <tr><td>toRepeatingDecimal(limit?, onLimit?), toRepeatingDecimalWithPeriod(opts?)</td><td><code>"0.1#6"</code>; period limit 30 by default</td></tr>
+  <tr><td>computeDecimalMetadata(maxPeriod?)</td><td>whole part, pre-period, period digits and length</td></tr>
+  <tr><td>toScientificNotation(useRepeat?, precision?)</td><td><code>"1.2345E4"</code></td></tr>
+  <tr><td>toBase(system), toRepeatingBase(system, opts?), toRepeatingBaseWithPeriod, periodModulo(system)</td><td>other bases</td></tr>
+  <tr><td>toContinuedFraction(opts?), toContinuedFractionString(opts?)</td><td><code>[3n, 7n, 16n]</code>, <code>"3.~7~16"</code></td></tr>
+  <tr><td>convergents(opts?), getConvergent(k)</td><td>convergents, with <code>long</code> and <code>intermediates</code> options</td></tr>
+  <tr><td>bestApproximation(maxDen), bestConvergent(maxDen), approximationError(x)</td><td>closest fractions with bounded denominators</td></tr>
+  <tr><td>Rational.fromContinuedFraction, fromContinuedFractionString, convergentsFromCF</td><td>static builders</td></tr>
+  <tr><td>comparisons, equals, bitLength</td><td>as for Integer</td></tr>
+</table></div>
+
+<h2>RationalInterval</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>method</th><th>result</th></tr>
+  <tr><td>add, subtract, multiply, divide, negate, reciprocate</td><td>intervals containing every possible result; dividing by an interval that contains 0 throws</td></tr>
+  <tr><td>pow(n) / mpow(n)</td><td>image <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">{</mo><msup><mi>x</mi><mi>n</mi></msup><mo stretchy="false">}</mo></mrow><annotation encoding="application/x-tex">\{x^n\}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">{</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mclose">}</span></span></span></span> / product of n independent factors</td></tr>
+  <tr><td>overlaps, contains, containsValue, containsZero, equals</td><td>booleans</td></tr>
+  <tr><td>intersection, union</td><td>an interval or <code>null</code></td></tr>
+  <tr><td>midpoint, mediant, shortestDecimal(base?), denominatorInterval(d?), randomRational(d?)</td><td>points inside</td></tr>
+  <tr><td>toString, toMixedString, toRepeatingDecimal, compactedDecimalInterval, relativeDecimalInterval, relativeMidDecimalInterval</td><td><code>"1/3:2/3"</code>, <code>"1.2[24:35]"</code>, <code>"1.2295[+-55]"</code>, …</td></tr>
+  <tr><td>E(k), bitLength()</td><td>scaling, size</td></tr>
+</table></div>
+
+<h2 id="sets">RationalIntervalSet and range arithmetic</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>member</th><th>result</th></tr>
+  <tr><td>containsValue, contains, equals, union, intersection, hull, toRationalInterval</td><td>set operations; <code>toString()</code> gives <code>"(2,8] U [10,12]"</code></td></tr>
+  <tr><td>asRationalIntervalSet(v)</td><td>any Core number as a set</td></tr>
+  <tr><td>rangeAdd, rangeSubtract, rangeMultiply, rangeDivide, rangeReciprocal, rangeNegate, rangeAbsoluteValue, rangeIntegerPower</td><td><code>{ range, domain, … }</code>: exact images of sets; dividing by a set that contains 0 gives the image of the rest, and <code>domain</code> records what was left out</td></tr>
+  <tr><td>checkRangeOperationResult, RANGE_OPERATION_RESULT_SCHEMA, RANGE_ARITHMETIC_CHECKER_ID</td><td>validation of stored results</td></tr>
+</table></div>
+
+<h2>Certified approximations</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>member</th><th>result</th></tr>
+  <tr><td>candidate, enclosure, low, high, representation, sourceId, dependencies</td><td>the guess, the guarantee, and where it came from</td></tr>
+  <tr><td>add, subtract, multiply, divide, negate, reciprocal, pow, E</td><td>new approximations whose enclosure contains every possible result</td></tr>
+  <tr><td>possibleRelations(a, b), a.possibleRelationsTo(b), Relation</td><td>bit mask of <code>Relation.LESS | EQUAL | GREATER</code></td></tr>
+  <tr><td>certifiedRadixPrefix, certifiedContinuedFractionPrefix</td><td>build from digits or coefficients</td></tr>
+  <tr><td>boundedDecimalApproximation(q, { fractionalDigits }), boundedContinuedFractionApproximation(q, { maxTerms })</td><td>an exact value cut to a budget, with its enclosure</td></tr>
+  <tr><td>normalizeCertifiedApproximation(candidate, enclosure)</td><td>a plain value when the enclosure is a point</td></tr>
+  <tr><td>toRationalInterval, toRational, copy, toString, toJSON</td><td>conversions</td></tr>
+</table></div>
+
+<h2>Text in, values out</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>export</th><th>result</th></tr>
+  <tr><td>R`…`</td><td>exact arithmetic on literals: Integer, Rational, RationalInterval, CertifiedApproximation, or a boolean for a chain; see <a href="r-template.html">R</a></td></tr>
+  <tr><td>R.base(radix)`…`, R.between`…`, R.region`…`</td><td>another base; a chain typed boolean; a Region</td></tr>
+  <tr><td>parseNumber(text)</td><td>any literal: Integer, Rational, RationalInterval or CertifiedApproximation</td></tr>
+  <tr><td>parseRational, parseDecimal, parseRepeatingDecimal, parseMixedNumber, parseContinuedFraction, parseInterval, parseCertifiedApproximation</td><td>one literal kind each; see <a href="parsing.html">Number literals</a></td></tr>
+</table></div>
+
+<h2>Lists</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>export</th><th>result</th></tr>
+  <tr><td>range(start, end, step = 1)</td><td>inclusive ExactList</td></tr>
+  <tr><td>seq(list | start, end[, step], fn?)</td><td>ExactList of terms</td></tr>
+  <tr><td>sum(…), product(…)</td><td>exact total (0 and 1 when empty)</td></tr>
+  <tr><td>exact(iterable), ExactList</td><td>Array subclass with sum, product, add, subtract, multiply, divide, pow, min, max</td></tr>
+</table></div>
+
+<h2>Fractions and the Stern–Brocot tree</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>member</th><th>result</th></tr>
+  <tr><td>add, subtract (equal denominators), multiply, divide, pow, scale, reduce, E</td><td>arithmetic that keeps the written components</td></tr>
+  <tr><td>mediant, Fraction.mediant, fareyParents, Fraction.mediantPartner, isMediantTriple, isFareyTriple</td><td>mediants and Farey neighbours</td></tr>
+  <tr><td>sternBrocotPath, Fraction.fromSternBrocotPath, sternBrocotParent, sternBrocotChildren, sternBrocotDepth, sternBrocotAncestors, isSternBrocotValid</td><td>the tree</td></tr>
+  <tr><td>FractionInterval: mediantSplit, partitionWithMediants(depth), partitionWith(fn), toRationalInterval</td><td>subdivision</td></tr>
+</table></div>
+
+<h2>Bases</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>member</th><th>result</th></tr>
+  <tr><td>BaseSystem: toDecimal(text), fromDecimal(bigint), getChar(k), isValidString, equals, withCaseSensitivity</td><td>integer conversion in any alphabet</td></tr>
+  <tr><td>BaseSystem.fromBase(n), createPattern(kind, size), registerPrefix, getSystemForPrefix, getPrefixForSystem</td><td>factories and the <code>0x</code>-style prefixes</td></tr>
+  <tr><td>NumeralSystem: parse, format(q, { maxDigits, mode }), normalize, places, locale, tokenize</td><td>exact parsing and bounded expansion with evidence</td></tr>
+  <tr><td>NUMERAL_SYSTEM_SCHEMA, NUMERAL_LIMITS</td><td>descriptor schema and limits</td></tr>
+</table></div>
+
+<h2>Types and JSON</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>export</th><th>result</th></tr>
+  <tr><td>isInteger, isRational, isRationalInterval, isRationalIntervalSet, isCertifiedApproximation, isFraction, isFractionInterval, isBaseSystem, isCoreNumber</td><td>type guards</td></tr>
+  <tr><td>reviveCoreValue</td><td>a <code>JSON.parse</code> reviver for the tagged <code>toJSON()</code> output</td></tr>
+  <tr><td>TypePromotion.getTypeLevel, promoteToLevel, promoteToCommonType, add, subtract, multiply, divide, power, multiplyPower, negate</td><td>dispatch for evaluators</td></tr>
+</table></div>
+<section class="runbox" aria-label="Runnable code">
+  <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/core</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
+  <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">// Look up a method and try it here.
+const q = new Rational(-9, 4);
+PRINT(q, q.toMixedString(), q.floor(), q.round());
+PRINT(new Integer(7).divmod(new Integer(-2)));
+PRINT(isRational(q), isInteger(q));
+
+const saved = JSON.stringify({ q, I: R`1:2` });
+PRINT(saved);
+JSON.parse(saved, reviveCoreValue)</textarea>
+  <div class="runbox-bar"><button type="button" data-run>Run</button><button type="button" class="ghost" data-reset>Reset</button><span class="runbox-meta">Ctrl/⌘ + Enter runs</span></div>
+  <div class="runbox-out" aria-live="polite"></div>
+</section>
+<nav class="pager" aria-label="Previous and next page"><a class="prev" href="index.html"><small>Previous</small>Overview</a><a class="next" href="explore.html"><small>Next</small>Explore</a></nav>
+</section>
+</main>
+</div>
+<script type="module" src="assets/pages.js?v=90f125101d"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>The R template</h1>
+<p class="lede"><code>R</code> is a tagged template that reads exact arithmetic written as text: <code>R`1/3 + 1/6`</code> is the Rational \(\tfrac12\). Literals are spelled as in RiX and RatCalc, so text moves between them unchanged.</p>
+<div data-demo="rtemplate"></div>
+
+<h2>Literals</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>form</th><th>example</th><th>value</th></tr>
+  <tr><td>integer, <code>_</code> groups digits</td><td><code>1_000</code></td><td>1000</td></tr>
+  <tr><td>fraction, mixed number</td><td><code>3/4</code>, <code>1..2/3</code></td><td>\(\tfrac34\), \(\tfrac53\)</td></tr>
+  <tr><td>decimal, repeating <code>#</code>, digit runs</td><td><code>.5</code>, <code>0.#3</code>, <code>0.{3~4}1</code></td><td>\(\tfrac12\), \(\tfrac13\), \(0.33331\)</td></tr>
+  <tr><td>uncertainty</td><td><code>1.2[3:6]</code>, <code>1.5[+-0.01]</code></td><td>\([1.23, 1.26]\), \([1.499, 1.501]\)</td></tr>
+  <tr><td>interval</td><td><code>2:5</code></td><td>\([2, 5]\)</td></tr>
+  <tr><td>continued fraction</td><td><code>3.~7~15~1</code>, <code>~-1.~2</code></td><td>\(\tfrac{355}{113}\), \(-\tfrac12\)</td></tr>
+  <tr><td>radix shift</td><td><code>1_^3</code>, <code>2.5_^-2</code></td><td>\(1000\), \(\tfrac1{40}\)</td></tr>
+  <tr><td>base prefix</td><td><code>0xff.8</code>, <code>0b0.#01</code>, <code>0z[7]66</code></td><td>\(\tfrac{511}2\), \(\tfrac13\), \(48\)</td></tr>
+  <tr><td>certified</td><td><code>1.5?</code>, <code>3.~7?</code></td><td>a <a href="#certified">CertifiedApproximation</a></td></tr>
+</table></div>
+<p>A radix shift belongs to the literal before it: <code>1/2_^3</code> is \(1/(2 \cdot 10^3)\). A leading <code>-</code> is negation, so <code>-3.~7</code> is \(-(3 + \tfrac17)\); write <code>~-3.~7</code> for a negative first term. There is no <code>E</code> notation (use <code>_^</code>).</p>
+
+<h2>Operators</h2>
+<p>From loosest to tightest: a spaced <code>:</code>; <code>+ -</code>; <code>* /</code>; unary <code>-</code>; <code>^</code> and <code>**</code> (the same power, right-associative, integer exponents); postfix <code>!</code> and <code>!!</code>. So <code>-2^2</code> is \(-4\) and <code>2^3^2</code> is \(2^9\). A whole Rational result comes back as an <code>Integer</code>: <code>R`0.#3 * 3`</code> is the Integer 1.</p>
+
+<h2>Spacing decides what a colon holds</h2>
+<p>A colon written without spaces binds to the unspaced text around it before any spaced operator applies; a colon with spaces binds loosest. This is how RiX reads it too:</p>
+<div class="tablewrap"><table class="ref">
+  <tr><th>text</th><th>reads as</th><th>value</th></tr>
+  <tr><td>1:2 + 3:4</td><td>(1:2) + (3:4)</td><td>4:6</td></tr>
+  <tr><td>1:2 * 2</td><td>(1:2) * 2</td><td>2:4</td></tr>
+  <tr><td>1:2*2</td><td>1:(2*2)</td><td>1:4</td></tr>
+  <tr><td>1:n+1</td><td>1:(n+1)</td><td>(with n interpolated)</td></tr>
+  <tr><td>1 : 2 + 3</td><td>1:(2 + 3)</td><td>1:5</td></tr>
+  <tr><td>1/2:3/4</td><td>(1/2):(3/4)</td><td>1/2:3/4</td></tr>
+</table></div>
+<p>With one unspaced colon, unspaced arithmetic stays on its endpoint. Three or more values joined by colons are a <a href="#chains">betweenness chain</a> and give a boolean.</p>
+
+<h2>Interpolation is exact</h2>
+<p><code>${value}</code> inserts a value as a value, not as text. It accepts Core numbers, bigints, safe integers and strings (read as literals). A float like <code>0.1</code> throws a <code>TypeError</code>: it is already inexact, and Core will not guess which decimal you meant. Pass the string <code>"0.1"</code> instead.</p>
+<pre><code>import { R, Rational } from "@ratmath/core";
+
+const third = new Rational(1, 3);
+R`(${third} + 1) ^ 2`;          // Rational 16/9
+R`${"0.1"} + ${"0.2"}`;         // Rational 3/10
+R`${2n ** 70n} / 3`;            // a big Rational
+R.base(16)`ff.8 / 3`;           // Rational 511/6, literals read in base 16
+R.base(2)`101 + 0x10`;          // 21: prefixed literals keep their own base</code></pre>
+
+<h2>Errors</h2>
+<p><code>SyntaxError</code> for text <code>R</code> cannot read (unknown characters, unbalanced parentheses, an unknown base prefix); <code>TypeError</code> for a non-integer exponent, <code>!</code> of a non-integer, an interval whose end is an interval, a chain used in arithmetic, or an inexact interpolation. Division by zero comes from the number classes.</p>
+
+<template data-runbox>
+const n = 4;
+PRINT("1:2 + 3:4 =", R`1:2 + 3:4`);
+PRINT("1:2 * 2  =", R`1:2 * 2`, "   1:2*2 =", R`1:2*2`);
+PRINT("1:n+1 with n = 4:", R`1:${n}+1`);
+PRINT("0.#3 * 3 is", R`0.#3 * 3`.constructor.name);
+try { R`${0.1} + 1` } catch (e) { PRINT("floats are refused:", e.message) }
+R.base(2)`0.#01`
+</template>

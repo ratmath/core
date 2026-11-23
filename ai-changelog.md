@@ -2,6 +2,22 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Docs rebuilt as separate pages with runnable code boxes
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-23
+
+The Quarto site is replaced by the same multi-page layout as analytic, linalg and algebraic: overview, reference, explore and twelve topic pages with live demos, KaTeX math rendered at build time, and an editable JavaScript box at the end of every page.
+
+Sources are `docs-src/layout.html` and `docs-src/pages/*.html`; `bun run docs:build` (scripts/build-docs.js) bundles `docs/assets/core.js` (names kept, so `constructor.name` works in the boxes), typesets `\( … \)` / `\[ … \]`, stamps `?v=` hashes on asset links, writes sitemap/robots and redirect stubs for the old Quarto page names, and runs each page's box, failing on any error. `docs/assets/runbox.js` (the box) and `scripts/docs-kit.js` (build helpers) are shared verbatim across the library docs sites. KaTeX 0.19.1 is a devDependency; the pages link the shared stylesheet at ratmath.com/assets/katex/0.19.1/. Covers 0.9.0 chains (`:!`, `_`, `||`, `Region`).
+
+## Docs move to ratmath.com/core
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-22
+
+Documentation is served at https://ratmath.com/core/ instead of core.ratmath.com (James, 2026-11-22: library docs live under ratmath.com).
+
+Removed `documentation/CNAME`; updated the Quarto `site-url`, `package.json` homepage, README link, and the built `docs/` sitemap, robots.txt and link filter. core.ratmath.com is kept alive by a separate redirect site.
+
 ## Strict links, unbounded ends and Region (0.9.0)
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-22

@@ -1,0 +1,65 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>Intervals</h1>
+<p class="lede">A <code>RationalInterval</code> is a closed range \([a, b]\) with exact rational ends. Arithmetic on intervals returns an interval that contains every possible result, so a value known only to lie in a range keeps a guarantee through any calculation.</p>
+
+<h2>The rules</h2>
+<p>If \(x \in [a, b]\) and \(y \in [c, d]\), then</p>
+\[ x + y \in [a + c,\ b + d], \qquad x - y \in [a - d,\ b - c], \]
+\[ x\,y \in [\min S,\ \max S], \quad S = \{ac, ad, bc, bd\}, \qquad \frac{x}{y} \in [a, b] \cdot \left[\tfrac1d, \tfrac1c\right] \ \text{ if } 0 \notin [c, d]. \]
+<p>Each result is the smallest interval with that guarantee, because the extremes of a sum or product of independent values are reached at the ends. Dividing by an interval that contains 0 throws: the answer would be unbounded.</p>
+<div data-demo="intervals"></div>
+<pre><code>import { RationalInterval } from "@ratmath/core";
+
+const a = new RationalInterval(1, 2);
+const b = new RationalInterval(3, 4);
+a.add(b).toString();          // "4:6"
+a.multiply(b).toString();     // "3:8"
+a.divide(b).toString();       // "1/4:2/3"</code></pre>
+
+<h2>One value or two: pow and mpow</h2>
+<p>Interval arithmetic treats each operand as its own unknown. So \(x \cdot x\) for \(x \in [-2, 3]\) is computed as if the two factors could differ, giving \([-6, 9]\), although a square is never negative. <code>pow(n)</code> is the image of one unknown, \(\{x^n : x \in [a, b]\}\), which is \([0, 9]\); <code>mpow(n)</code> is the product of \(n\) independent factors. This is the <em>dependency problem</em> of interval arithmetic: rewriting a formula so each unknown appears once gives tighter results.</p>
+<pre><code>new RationalInterval(-2, 3).pow(2).toString();    // "0:9"
+new RationalInterval(-2, 3).mpow(2).toString();   // "-6:9"</code></pre>
+
+<h2>Orientation</h2>
+<p><code>start</code> and <code>end</code> keep the order you wrote, so <code>3/4:1/4</code> prints as written and <code>isAscending</code> is false. <code>low</code> and <code>high</code> are the sorted ends that the arithmetic uses, and <code>equals</code> compares those, so \([3/4, 1/4]\) equals \([1/4, 3/4]\).</p>
+
+<h2>Comparing and combining</h2>
+<pre><code>const p = new RationalInterval(1, 3);
+const q = new RationalInterval(3, 5);
+p.overlaps(q);                    // true, they share 3
+p.intersection(q).toString();     // "3:3"
+p.union(q).toString();            // "1:5"
+p.containsValue("5/2");           // true
+p.contains(new RationalInterval(2, 3));   // true</code></pre>
+<p><code>union</code> returns one interval when the two touch or overlap and <code>null</code> otherwise. For unions with gaps, use interval sets (below).</p>
+
+<h2>Writing intervals</h2>
+<p>A long interval like \([1.224, 1.235]\) has several useful spellings. The common-prefix form <code>1.2[24:35]</code> shares the digits both ends agree on; the midpoint form <code>1.2295[+-55]</code> gives a centre and a symmetric offset in units of the last digit; the relative form <code>1.23[+0.5:-0.6]</code> is anchored at a short decimal. All are valid input, so they round-trip.</p>
+<div data-demo="display"></div>
+
+<h2>Points inside</h2>
+<p><code>midpoint()</code> is \((a + b)/2\). <code>mediant()</code> is \(\frac{p + r}{q + s}\) for ends \(\frac pq, \frac rs\), often a simpler fraction. <code>shortestDecimal()</code> is a terminating decimal with the fewest digits in the interval: for \([\tfrac13, \tfrac23]\) it is \(0.4\). <code>denominatorInterval(d)</code> and <code>randomRational(d)</code> work on the grid of fractions with denominator \(d\).</p>
+
+<h2 id="sets">Interval sets</h2>
+<p><code>RationalIntervalSet</code> is a finite union of disjoint intervals whose ends may be open, closed or unbounded, such as \((2, 8] \cup [10, \infty)\). The <code>range*</code> functions compute exact images of whole sets, and report the part of the input where an operation is undefined instead of throwing:</p>
+<pre><code>import { asRationalIntervalSet, rangeDivide, rangeIntegerPower, R } from "@ratmath/core";
+
+const r = rangeDivide(R`1`, asRationalIntervalSet(R`-1:2`));
+r.range.toString();           // "(-inf,-1] U [1/2,inf)"
+r.domain.coverage;            // "partiallyDefined" (0 was excluded)
+rangeIntegerPower(asRationalIntervalSet(R`-2:3`), 2).range.toString();   // "[0,9]"</code></pre>
+<p>Sets also come from <a href="#chains">regions</a>: <code>Region.parse("2:!x:8 || 10:x:_").within(0, 12)</code> is \((2, 8] \cup [10, 12]\).</p>
+
+<template data-runbox>
+const x = R`-2:3`;
+PRINT("x * x  =", x.mpow(2), "  (two independent factors)");
+PRINT("x ^ 2  =", x.pow(2), "  (one value squared)");
+PRINT("1 / (1:2) =", R`1 / (1:2)`);
+
+const I = R`1.224:1.235`;
+PRINT(I.compactedDecimalInterval(), I.relativeMidDecimalInterval(), I.relativeDecimalInterval());
+PRINT("shortest decimal in 1/3:2/3:", R`1/3:2/3`.shortestDecimal());
+rangeDivide(R`1`, asRationalIntervalSet(R`-1:2`)).range
+</template>

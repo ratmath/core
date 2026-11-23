@@ -1,0 +1,62 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>Rationals</h1>
+<p class="lede">A <code>Rational</code> is a fraction \(p/q\) held as two <code>BigInt</code>s, always in lowest terms with \(q &gt; 0\). Sums, products and quotients of fractions are fractions, so nothing is ever rounded.</p>
+
+<h2>Lowest terms</h2>
+<p>Every constructor divides out \(g = \gcd(p, q)\) and moves the sign to the numerator, so two equal values always have the same parts and <code>equals</code> is a comparison of two pairs of integers. Arithmetic uses the schoolbook rules and reduces again:</p>
+\[ \frac{a}{b} + \frac{c}{d} = \frac{ad + bc}{bd}, \qquad \frac{a}{b}\cdot\frac{c}{d} = \frac{ac}{bd}, \qquad \frac{a}{b} \div \frac{c}{d} = \frac{ad}{bc}. \]
+<pre><code>import { Rational } from "@ratmath/core";
+
+new Rational(6, -8).toString();            // "-3/4"
+new Rational("2..1/3").toString();         // "7/3" (mixed number)
+new Rational("0.#3").toString();           // "1/3" (repeating decimal)
+const x = new Rational(2, 3);
+x.add(new Rational(5, 6)).toString();      // "3/2"
+x.pow(-2).toString();                      // "9/4"
+x.E(3).toString();                         // "2000/3", times 10^3
+x.lessThan(new Rational(3, 4));            // true</code></pre>
+<p>A string argument may be any number literal (integer, fraction, mixed number, decimal, repeating decimal); a second argument divides it, so <code>new Rational("3/4", 5)</code> is \(\tfrac{3}{20}\). Number arguments must be safe integers.</p>
+
+<h2>Repeating decimals</h2>
+<p>Every fraction has a decimal expansion that ends or repeats forever. RatMath writes the repeating block after a <code>#</code>: \(\tfrac16 = 0.1\overline{6}\) is <code>0.1#6</code>, and \(\tfrac17\) is <code>0.#142857</code>. Both directions are exact: <code>parseDecimal("0.1#6")</code> gives back \(\tfrac16\).</p>
+<div data-demo="repeating"></div>
+<p>Why it repeats: long division of \(p\) by \(q\) only ever has remainders \(0, 1, \ldots, q-1\), so within \(q\) steps a remainder comes back and the digits cycle from there. Write \(q = 2^a 5^b m\) with \(\gcd(m, 10) = 1\). Then the expansion has \(\max(a, b)\) digits before the period, and the period length is the order of 10 modulo \(m\): the least \(k\) with</p>
+\[ 10^k \equiv 1 \pmod m. \]
+<p>The decimal ends exactly when \(m = 1\). For \(\tfrac17\), \(10^6 = 142857 \cdot 7 + 1\), so the period is 6. Going back is a geometric series: a block \(B\) of \(k\) digits repeating forever is \(B/(10^k - 1)\), which is why <code>0.#9</code> is exactly 1.</p>
+<pre><code>const sixth = new Rational(1, 6);
+sixth.toRepeatingDecimal();                // "0.1#6"
+sixth.toRepeatingDecimalWithPeriod();      // { decimal: "0.1#6", period: 1, truncated: false }
+new Rational(1, 97).toRepeatingDecimal(100);   // 96-digit period, limit raised to 100
+new Rational(1, 97).toRepeatingDecimal(10, "trunc");   // "0.#0103092783..." (display only)</code></pre>
+<p>The default period limit is 30 digits (<code>Rational.MAX_PERIOD_DIGITS</code>). Past it, <code>toRepeatingDecimal</code> throws unless you pass a larger limit, or <code>"trunc"</code> for a display string ending in <code>...</code>, which is deliberately not parseable. <code>computeDecimalMetadata()</code> returns the pieces (whole part, pre-period, period digits and length) for your own formatting.</p>
+
+<h2>Other written forms</h2>
+<div class="tablewrap"><table class="ref">
+  <tr><th>method</th><th>\(-9/4\) gives</th><th>exact?</th></tr>
+  <tr><td>toString()</td><td><code>-9/4</code></td><td>yes</td></tr>
+  <tr><td>toMixedString()</td><td><code>-2..1/4</code></td><td>yes</td></tr>
+  <tr><td>toRepeatingDecimal()</td><td><code>-2.25#0</code> (a <code>#0</code> marks the end)</td><td>yes</td></tr>
+  <tr><td>toDecimal(digits = 20)</td><td><code>-2.25</code></td><td>display: cut after <code>digits</code> places</td></tr>
+  <tr><td>toScientificNotation()</td><td><code>-2.25E0</code></td><td>display</td></tr>
+  <tr><td>toNumber()</td><td><code>-2.25</code></td><td>a float: may round</td></tr>
+</table></div>
+
+<h2>Rounding</h2>
+<p><code>floor</code>, <code>ceil</code>, <code>trunc</code> and <code>round(mode)</code> return bigints; <code>roundTo(places, mode)</code> returns a <code>Rational</code> with at most that many decimal places. Modes are <code>half-even</code> (the default, banker's rounding), <code>half-up</code>, <code>toward-zero</code>, <code>floor</code> and <code>ceil</code>. Because the value is exact, the rounding is decided correctly even for ties like \(2.5\) that floats cannot always see.</p>
+<pre><code>const t = new Rational(5, 2);
+[t.floor(), t.ceil(), t.round(), t.round("half-up")];   // [2n, 3n, 2n, 3n]
+new Rational(2, 3).roundTo(3).toString();               // "667/1000"</code></pre>
+
+<template data-runbox>
+const q = new Rational(1, 7);
+PRINT(q, "=", q.toRepeatingDecimal());
+PRINT("period of 1/97:", new Rational(1, 97).toRepeatingDecimalWithPeriod({ limit: 200 }).period);
+PRINT("0.#9 =", parseDecimal("0.#9"));
+
+// order of 10 modulo m, the period length, by brute force
+const order = (m) => { let k = 1, r = 10n % m; while (r !== 1n) { r = (r * 10n) % m; k++; } return k; };
+PRINT("order of 10 mod 7:", order(7n), " mod 97:", order(97n));
+
+new Rational(2, 3).roundTo(3)
+</template>

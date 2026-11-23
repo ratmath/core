@@ -1,0 +1,52 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>Certified approximations</h1>
+<p class="lede">A <code>CertifiedApproximation</code> is one unknown number described two ways: a <em>candidate</em> for display, and an exact <em>enclosure</em>, a rational interval that is guaranteed to contain the true value. Only the enclosure is a promise.</p>
+
+<h2>Writing one: the <code>?</code></h2>
+<p>A <code>?</code> inside a decimal or continued fraction splits it: digits before the <code>?</code> are certain, digits after it are a guess. <code>23.456?789</code> says the true value starts \(23.456\ldots\) (so lies in \([23.456, 23.457]\)) and that the best guess is \(23.456789\). A trailing <code>?</code> with no guess, as in <code>1.5?</code>, means the value is in \([1.5, 1.6]\) and the candidate is \(1.5\).</p>
+\[ \texttt{23.456?789}: \qquad \text{candidate } 23.456789, \qquad \text{enclosure } [23.456,\ 23.457]. \]
+<div data-demo="certified"></div>
+<pre><code>import { parseNumber } from "@ratmath/core";
+
+const reading = parseNumber("23.456?789");
+reading.candidate.toString();    // "23456789/1000000"
+reading.enclosure.toString();    // "2932/125:23457/1000"
+parseNumber("3.~7~15?").enclosure.toString();   // "333/106:355/113"
+parseNumber("23.456?789[+-12]");  // a narrower enclosure, inside the certified cell</code></pre>
+<p>For a continued fraction the certified prefix \([3; 7, 15]\) allows any continuation, so the value lies between \(\tfrac{333}{106}\) (stop here) and \(\tfrac{355}{113}\) (continue with a 1, the largest step). A bracket after the guess narrows the enclosure, and is rejected if it leaves the certified cell.</p>
+
+<h2>Arithmetic</h2>
+<p>Operations act on both parts: candidates combine as numbers, enclosures combine by <a href="#intervals">interval arithmetic</a>, so the result's enclosure again contains the true result. Two copies of the same reading know they are the same number: subtracting them gives exactly 0, which plain intervals cannot do.</p>
+<pre><code>const shifted = reading.add(parseNumber("0.5"));
+shifted.enclosure.toString();    // "5989/250:23957/1000"
+reading.subtract(reading.copy()).toString();   // "0"</code></pre>
+
+<h2>Comparisons that admit doubt</h2>
+<p>If two enclosures overlap, "is \(a &lt; b\)?" has no honest yes-or-no answer. <code>possibleRelations(a, b)</code> returns a bit mask of the relations that are still possible: <code>Relation.LESS</code>, <code>Relation.EQUAL</code>, <code>Relation.GREATER</code>. A single bit means the question is settled.</p>
+<pre><code>import { possibleRelations, Relation } from "@ratmath/core";
+
+const m = possibleRelations(parseNumber("2?"), parseNumber("2.5?"));
+(m &amp; Relation.LESS) !== 0;       // true: a could be less
+(m &amp; Relation.GREATER) !== 0;    // true: or greater, since [2, 3] and [2.5, 2.6] overlap</code></pre>
+
+<h2>Cutting an exact value to a budget</h2>
+<p><code>boundedDecimalApproximation(q, { fractionalDigits })</code> returns \(q\) itself when it fits in that many decimal places, and otherwise a certified prefix: \(\tfrac13\) to 5 places is <code>0.33333?</code>. <code>boundedContinuedFractionApproximation(q, { maxTerms })</code> does the same with continued-fraction terms. Both keep the honest answer ("the value is in this interval") instead of a rounded one.</p>
+<pre><code>import { boundedDecimalApproximation, R } from "@ratmath/core";
+
+boundedDecimalApproximation(R`1/3`, { fractionalDigits: 5 }).toString();   // "0.33333?"
+boundedDecimalApproximation(R`1/8`, { fractionalDigits: 5 }).toString();   // "1/8", exact</code></pre>
+
+<h2>Saving and restoring</h2>
+<p><code>toString()</code> is parseable and keeps both parts. <code>JSON.stringify</code> uses the tagged <code>toJSON()</code>, which also keeps where the value came from; read it back with <code>JSON.parse(text, reviveCoreValue)</code>.</p>
+
+<template data-runbox>
+const a = parseNumber("3.14159?26");
+PRINT("candidate", a.candidate, " enclosure", a.enclosure);
+const b = R`22/7`;
+const m = possibleRelations(a, b);
+PRINT("a < b possible:", (m & Relation.LESS) !== 0, " a > b possible:", (m & Relation.GREATER) !== 0);
+PRINT("a * 2 =", a.multiply(R`2`));
+PRINT("1/3 to 8 places:", boundedDecimalApproximation(R`1/3`, { fractionalDigits: 8 }));
+a.subtract(a.copy())
+</template>

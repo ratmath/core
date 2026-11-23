@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Types, promotion and JSON · RatMath Core</title>
+<meta name="description" content="How mixed arithmetic chooses a result type, type guards and JSON.">
+<link rel="canonical" href="https://ratmath.com/core/promotion.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
+<link rel="stylesheet" href="assets/site.css?v=90f125101d">
+</head>
+<body>
+<div class="shell">
+<aside>
+  <header class="brand"><a class="mark" href="index.html">RatMath <span>core</span></a><small>Exact numbers for JavaScript</small></header>
+  <select id="toc-select" aria-label="Page">
+    <option value="index.html">Overview</option>
+    <option value="reference.html">Reference</option>
+    <option value="explore.html">Explore</option>
+    <option value="integers.html">Integers</option>
+    <option value="rationals.html">Rationals</option>
+    <option value="continued-fractions.html">Continued fractions</option>
+    <option value="intervals.html">Intervals</option>
+    <option value="certified.html">Certified approximations</option>
+    <option value="r-template.html">The R template</option>
+    <option value="chains.html">Chains and regions</option>
+    <option value="parsing.html">Number literals</option>
+    <option value="bases.html">Bases and numeral systems</option>
+    <option value="lists.html">Lists, sums and products</option>
+    <option value="fractions.html">Fractions and Stern–Brocot</option>
+    <option value="promotion.html" selected>Types, promotion and JSON</option>
+  </select>
+  <nav class="toc" aria-label="Contents">
+    <a href="index.html">Overview</a>
+    <a href="reference.html">Reference</a>
+    <a href="explore.html">Explore</a>
+    <div class="group">Numbers</div>
+    <a href="integers.html">Integers</a>
+    <a href="rationals.html">Rationals</a>
+    <a href="continued-fractions.html">Continued fractions</a>
+    <a href="intervals.html">Intervals</a>
+    <a href="certified.html">Certified approximations</a>
+    <div class="group">Writing numbers</div>
+    <a href="r-template.html">The R template</a>
+    <a href="chains.html">Chains and regions</a>
+    <a href="parsing.html">Number literals</a>
+    <a href="bases.html">Bases and numeral systems</a>
+    <div class="group">More</div>
+    <a href="lists.html">Lists, sums and products</a>
+    <a href="fractions.html">Fractions and Stern–Brocot</a>
+    <a href="promotion.html" class="on" aria-current="page">Types, promotion and JSON</a>
+  </nav>
+  <p class="aside-foot"><a href="https://github.com/ratmath/core">GitHub</a> · <a href="https://www.npmjs.com/package/@ratmath/core">npm</a> · <a href="https://ratmath.com/">ratmath.com</a></p>
+</aside>
+<main>
+<section class="page" data-page="promotion">
+<div class="eyebrow">Topic</div>
+<h1>Types, promotion and JSON</h1>
+<p class="lede">Mixed arithmetic moves up a ladder, Integer → Rational → RationalInterval, and an exact result never moves down silently. Type guards, a JSON reviver and the <code>TypePromotion</code> helpers make the types easy to handle from outside.</p>
+<div data-demo="promotion"></div>
+
+<h2>The ladder</h2>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>Integer (level 0)</mtext><mtext>  </mtext><mo>⟶</mo><mtext>  </mtext><mtext>Rational (level 1)</mtext><mtext>  </mtext><mo>⟶</mo><mtext>  </mtext><mtext>RationalInterval (level 2)</mtext></mrow><annotation encoding="application/x-tex"> \text{Integer (level 0)} \;\longrightarrow\; \text{Rational (level 1)} \;\longrightarrow\; \text{RationalInterval (level 2)} </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Integer (level 0)</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⟶</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Rational (level 1)</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⟶</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">RationalInterval (level 2)</span></span></span></span></span></span>
+<p>An operation on two values first raises the lower one to the higher level (an integer <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span> becomes <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mi mathvariant="normal">/</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">n/1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">n</span><span class="mord">/1</span></span></span></span>, a rational <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi></mrow><annotation encoding="application/x-tex">q</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span></span></span></span> becomes <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>q</mi><mo separator="true">,</mo><mi>q</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[q, q]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span><span class="mclose">]</span></span></span></span>), then computes there. One exception keeps results tidy: dividing integers gives an Integer when the division is exact. The <code>R</code> template goes one step further and returns any whole Rational result as an Integer.</p>
+<pre><code>import { Integer, Rational, RationalInterval, TypePromotion } from "@ratmath/core";
+
+new Integer(2).add(new Rational(1, 3));            // Rational 7/3
+new Rational(1, 3).multiply(new RationalInterval(1, 2));   // RationalInterval 1/3:2/3
+new Integer(8).divide(new Integer(4));             // Integer 2
+TypePromotion.getTypeLevel(new Rational(1, 2));    // 1
+TypePromotion.promoteToCommonType(new Integer(1), new RationalInterval(2, 3));   // two intervals</code></pre>
+<p>Certified approximations sit beside the ladder: arithmetic with an Integer or Rational keeps a CertifiedApproximation, and an explicit operation with a RationalInterval gives an interval.</p>
+
+<h2>Type guards</h2>
+<p><code>isInteger</code>, <code>isRational</code>, <code>isRationalInterval</code>, <code>isRationalIntervalSet</code>, <code>isCertifiedApproximation</code>, <code>isFraction</code>, <code>isFractionInterval</code>, <code>isBaseSystem</code> and <code>isCoreNumber</code> work even when two copies of the library are loaded (where <code>instanceof</code> can fail).</p>
+
+<h2>JSON</h2>
+<p>Every value has a tagged <code>toJSON()</code>, so <code>JSON.stringify</code> keeps the exact parts as strings, and <code>reviveCoreValue</code> turns them back into values:</p>
+<pre><code>import { R, reviveCoreValue } from "@ratmath/core";
+
+const text = JSON.stringify({ x: R`1/3`, I: R`1:2` });
+// {"x":{"$ratmath":"Rational","numerator":"1","denominator":"3"},"I":{…}}
+const back = JSON.parse(text, reviveCoreValue);
+back.x.toString();       // "1/3"</code></pre>
+<section class="runbox" aria-label="Runnable code">
+  <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/core</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
+  <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">const pairs = [[new Integer(2), new Rational(1, 3)], [new Integer(8), new Integer(4)], [new Integer(8), new Integer(3)], [R`1/2`, R`1:2`]];
+for (const [a, b] of pairs) {
+  const r = a.divide(b);
+  PRINT(`${a} / ${b} =`, r, `(${r.constructor.name})`);
+}
+const text = JSON.stringify({ x: R`1/3`, I: R`1:2` });
+PRINT(text);
+JSON.parse(text, reviveCoreValue)</textarea>
+  <div class="runbox-bar"><button type="button" data-run>Run</button><button type="button" class="ghost" data-reset>Reset</button><span class="runbox-meta">Ctrl/⌘ + Enter runs</span></div>
+  <div class="runbox-out" aria-live="polite"></div>
+</section>
+<nav class="pager" aria-label="Previous and next page"><a class="prev" href="fractions.html"><small>Previous</small>Fractions and Stern–Brocot</a><span></span></nav>
+</section>
+</main>
+</div>
+<script type="module" src="assets/pages.js?v=90f125101d"></script>
+</body>
+</html>

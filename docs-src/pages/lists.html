@@ -1,0 +1,41 @@
+<!-- wide: no -->
+<div class="eyebrow">Topic</div>
+<h1>Lists, sums and products</h1>
+<p class="lede"><code>range</code>, <code>seq</code>, <code>sum</code> and <code>product</code> build and total lists of exact values. They are what the RatCalc calculator uses for sums like \(\sum_{k=1}^{10} k^2\).</p>
+<div data-demo="harmonic"></div>
+<p>The harmonic numbers \(H_n = \sum_{k=1}^n \frac1k\) are a good test of exactness: the denominator of \(H_n\) grows roughly like \(e^n\) (it is close to \(\operatorname{lcm}(1, \ldots, n)\)), so a float sum keeps only 16 of its digits while <code>sum</code> keeps all of them.</p>
+
+<h2>range</h2>
+<p><code>range(start, end, step = 1)</code> is inclusive at both ends. Arguments are anything <code>R</code> interpolation accepts, so steps can be fractions. A negative step counts down; a zero step throws, as does a list longer than a million values.</p>
+<pre><code>import { R, range, seq, sum, product } from "@ratmath/core";
+
+range(1, 5);                    // [1, 2, 3, 4, 5]
+range(0, 1, R`1/4`);            // [0, 1/4, 1/2, 3/4, 1]
+range(5, 1, -2);                // [5, 3, 1]</code></pre>
+
+<h2>seq, sum, product</h2>
+<p>Each takes a list, or <code>start, end[, step]</code> as for <code>range</code>, and an optional function <code>(value, index) =&gt; term</code>. <code>sum</code> and <code>product</code> add or multiply exactly; empty input gives 0 and 1.</p>
+\[ \sum_{i=1}^{10} i^2 = 385, \qquad \sum_{i=1}^{4} \frac1i = \frac{25}{12}, \qquad \prod_{j=1}^{5} j = 120. \]
+<pre><code>seq(0, 6, 2, (k) => R`${k}^3`);   // [0, 8, 64, 216]
+sum(1, 10, (i) => R`${i}^2`);     // 385
+sum(1, 4, (i) => R`1/${i}`);      // 25/12
+product(1, 5, (j) => j);          // 120
+sum([R`1:2`, 1]);                 // 2:3, intervals add too</code></pre>
+
+<h2>ExactList</h2>
+<p><code>range</code> and <code>seq</code> return an <code>ExactList</code>, an <code>Array</code> subclass: indexing, spread, <code>map</code> and <code>filter</code> all work. Its own methods never change the list: <code>sum</code>, <code>product</code>, elementwise <code>add</code>, <code>subtract</code>, <code>multiply</code>, <code>divide</code> (by a constant or a list of the same length), <code>pow(n)</code>, <code>min</code>, <code>max</code>. <code>exact(values)</code> converts any iterable.</p>
+<pre><code>const xs = range(1, 4);
+xs.multiply(R`1/2`).product();    // 3/2
+xs.pow(-1).sum();                 // 25/12
+xs.add(range(4, 1, -1));          // [5, 5, 5, 5]</code></pre>
+
+<template data-runbox>
+PRINT("Σ i² for i = 1..10:", sum(1, 10, (i) => R`${i}^2`));
+PRINT("H(20) =", sum(1, 20, (k) => R`1/${k}`));
+PRINT("float sum:", Array.from({ length: 20 }, (_, i) => 1 / (i + 1)).reduce((a, b) => a + b));
+
+// Partial sums of 1/2 + 1/4 + 1/8 + ...
+const partial = seq(1, 8, (k) => sum(1, k, (j) => R`1/2^${j}`));
+PRINT(partial);
+range(0, 1, R`1/8`).pow(2).sum()
+</template>
