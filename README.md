@@ -92,6 +92,7 @@ R`0.#3 * 3`;                  // Integer 1
 R`2^-2 + 5!/3!`;              // Rational 81/4
 R`3.~7~15~1`;                 // continued fraction 355/113
 R`2.5_^-2`;                   // radix shift (RiX has no E notation): 1/40
+R`0t12_^2`;                   // in a base, shift by that base: ternary 12 × 3^2 = 45
 R`0xff.8 + 0b0.#01`;          // base prefixes: 511/2 + 1/3
 R.base(16)`ff.8 / 3`;         // unprefixed literals read in base 16: 511/6
 const x = new Rational(1, 3);
@@ -106,10 +107,16 @@ R`1.23[56:67] * 2`;           // uncertainty notation from parseNumber
 | decimals, repeating `#`, digit runs | `.5`, `0.#3`, `0.{3~4}1` | 1/2, 1/3, 33331/100000 |
 | uncertainty (colon only) | `1.2[3:6]`, `1.5[+-0.01]` | 1.23:1.26, 1.499:1.501 |
 | intervals | `2:5` | 2:5 |
-| continued fractions | `3.~7~15~1`, `~-1.~2` | 355/113, -1/2 |
-| radix shift (always ×10^k) | `1_^3`, `2.5_^-2` | 1000, 1/40 |
+| continued fractions | `3.~7~15~1`, `~-1.~2`, `-1.~2` | 355/113, -1/2, -3/2 |
+| radix shift (× base^k) | `1_^3`, `2.5_^-2`, `0t1_^10` | 1000, 1/40, 27 |
 | base prefixes | `0xff`, `0b0.#01`, `0o17`, `0z[7]66` | 255, 1/3, 15, 48 |
 | certified prefixes | `1.5?`, `3.~7?` | certified approximations |
+
+A plain leading `-` negates a whole continued fraction (`-3.~1~3` is
+-(3.~1~3) = -15/4); `~-` makes only the first term negative (`~-3.~1~3` is
+-3 + 1/(1 + 1/3) = -9/4). Every Core parser reads them this way, as RiX does.
+A radix shift `_^k` multiplies by the literal's base to the k, with k written
+in that base: `0t1_^10` is 3^3 and `0xff_^1` is 255 × 16.
 
 Operators, loosest first: `:` (interval), then `+ -`, then `* /`, then unary
 `-`, then `^` and `**` (right-associative, Integer exponent; `**` is the same
@@ -411,7 +418,10 @@ balanced.fromDecimal(-5n); // "T11"
 ```
 
 These nonstandard systems support integers and exact numerator/denominator
-formatting. Repeating fractional expansions require an ordinary positional
+formatting. `BaseSystem.ROMAN` is not a place-value system: it reads and writes
+standard Roman numerals from 1 to 3999 (`fromDecimal(1994n)` is `"MCMXCIV"`,
+`toDecimal("xiv")` is `14n`; `IIII` and `IC` are refused), and
+``R.base(BaseSystem.ROMAN)`XIV + II` `` is 16. Repeating fractional expansions require an ordinary positional
 system; check `supportsPositionalFractions` before requesting one.
 
 ### Versioned numeral systems (since 0.6.0)

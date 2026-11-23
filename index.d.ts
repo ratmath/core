@@ -678,6 +678,8 @@ export class BaseSystem {
   readonly base: number;
   readonly radix: number;
   readonly digitOffset: number;
+  /** False for BaseSystem.ROMAN, which is additive, not place-value. */
+  readonly isPositional: boolean;
   readonly supportsPositionalFractions: boolean;
   readonly requiresQuoting: boolean;
   readonly allowsReservedDigits: boolean;

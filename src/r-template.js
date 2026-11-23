@@ -96,28 +96,46 @@ function prefixedSystem(match) {
   return system;
 }
 
-function shift(value, exponent) {
-  const power = new Rational(10).pow(BigInt(exponent));
-  const shifted = value.multiply(power);
+// After a base-prefixed literal, or under R.base, the shift exponent is
+// written in that base and the shift is by its radix: 0t1_^10 is 1·3^3.
+const BASE_RADIX_SHIFT = /^_\^(-?[0-9a-zA-Z]+)/;
+
+function shift(value, exponent, system) {
+  let radix = 10n;
+  let power;
+  if (system) {
+    if (!system.isPositional) throw new SyntaxError(`R: ${system.name} has no radix shift`);
+    radix = BigInt(system.radix);
+    power = readInBase(system, exponent);
+    if (!(power instanceof Integer)) throw new SyntaxError(`R: radix shift exponent must be an integer`);
+    power = power.value;
+  } else {
+    power = BigInt(exponent);
+  }
+  const scale = new Rational(radix).pow(power);
+  const shifted = value.multiply(scale);
   return shifted instanceof Rational && shifted.denominator === 1n ? new Integer(shifted.numerator) : shifted;
 }
 
 export function readLiteral(rest, base) {
   const cf = rest.match(CONTINUED_FRACTION);
-  if (cf) return { text: cf[0], value: parseNumber(cf[0]) };
+  if (cf) return { text: cf[0], value: parseNumber(cf[0]), system: null };
   const prefixed = rest.match(PREFIXED);
   // Under R.base(n), 0 followed by one of the base's own digits is a number,
   // not a prefix: R.base(16)`0b1` is hex 0b1 = 177.
-  if (prefixed && !(base && isDigitOf(base, prefixed[0][1]))) return { text: prefixed[0], value: readInBase(prefixedSystem(prefixed), prefixed[3]) };
+  if (prefixed && !(base && isDigitOf(base, prefixed[0][1]))) {
+    const system = prefixedSystem(prefixed);
+    return { text: prefixed[0], value: readInBase(system, prefixed[3]), system };
+  }
   if (base) {
     const digits = rest.match(BASE_DIGITS)?.[0];
-    if (digits && digits !== ".") return { text: digits, value: readInBase(base, digits) };
+    if (digits && digits !== ".") return { text: digits, value: readInBase(base, digits), system: base };
     return null;
   }
   if (!/^[\d.]/.test(rest)) return null;
   const literal = rest.match(LITERAL)[0];
   if (!literal || literal === ".") throw new SyntaxError(`R: unexpected '${rest[0]}'`);
-  return { text: literal, value: parseNumber(literal) };
+  return { text: literal, value: parseNumber(literal), system: null };
 }
 
 function tokenize(strings, values, base) {
@@ -147,9 +165,9 @@ function tokenize(strings, values, base) {
       const literal = readLiteral(rest, base);
       if (literal) {
         index += literal.text.length;
-        const radixShift = text.slice(index).match(RADIX_SHIFT);
+        const radixShift = text.slice(index).match(literal.system ? BASE_RADIX_SHIFT : RADIX_SHIFT);
         if (radixShift) index += radixShift[0].length;
-        push({ kind: "value", value: radixShift ? shift(literal.value, radixShift[1]) : literal.value, text: literal.text });
+        push({ kind: "value", value: radixShift ? shift(literal.value, radixShift[1], literal.system) : literal.value, text: literal.text });
         continue;
       }
       const op = OPERATORS.find((candidate) => rest.startsWith(candidate));

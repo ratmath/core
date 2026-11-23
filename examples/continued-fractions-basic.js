@@ -45,7 +45,8 @@ console.log('2. Using Parser with CF Notation\n');
 const cfExpressions = [
     "3.~7",              // Simple π approximation
     "0.~2~3~4",          // Proper fraction
-    "-1.~2~3",           // Negative CF
+    "-1.~2~3",           // Negated CF: -(1.~2~3) = -10/7
+    "~-1.~2~3",          // Negative first term: -1 + 1/(2 + 1/3) = -4/7
     "22.~7",             // Integer > 10
     "5.~0"               // Integer representation
 ];

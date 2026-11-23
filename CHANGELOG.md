@@ -22,10 +22,23 @@ Betweenness chains gain strict links, unbounded ends and unions, and a new
 
 ### Changed
 
-- `toContinuedFractionString()` writes a negative first term as `~-3.~1~3`
-  (was `-3.~1~3`), so `R` reads the output back as the same value; `R` reads
-  a plain leading `-` as negating the whole continued fraction. Certified
-  continued-fraction prefixes print the same way (`~-4.~1?`).
+- Continued-fraction signs follow RiX in every parser (`R`, `parseNumber`,
+  `parseContinuedFraction`, `Rational.fromContinuedFractionString`,
+  `convergentsFromCF`, `NumeralSystem.parse`): a plain leading `-` negates the
+  whole value, so `-3.~1~3` is −(3.~1~3) = −15/4, and `~-3.~1~3` has first
+  term −3, so it is −3 + 1/(1 + 1/3) = −9/4. Before, the parsers other than `R`
+  read `-3.~1~3` as −9/4 (and `-0.~2` as +1/2).
+  `toContinuedFractionString()` writes a negative first term with the `~`
+  (`~-3.~1~3`, was `-3.~1~3`) so its output reads back as the same value;
+  certified continued-fraction prefixes print the same way (`~-4.~1?`).
+- The radix shift `_^k` after a base-prefixed literal, or under `R.base`,
+  multiplies by that base to the k, with k written in that base:
+  ``R`0t1_^10` `` is 3³ = 27 and ``R`0xff_^1` `` is 255 × 16 (was × 10).
+  Decimal literals are unchanged (`2.5_^-2` is 1/40).
+- `BaseSystem.ROMAN` reads and writes real Roman numerals (standard form,
+  1 to 3999, lower case accepted, `IIII`/`IC` refused) instead of treating
+  `IVXLCDM` as base-7 digits. `BaseSystem` gains `isPositional`, false only for
+  Roman numerals.
 - Under `R.base(n)`, a `0` followed by one of the base's own digits is a
   number, not a base prefix: ``R.base(16)`0b1` `` is 177 (was read as binary 1).
 

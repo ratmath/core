@@ -7,7 +7,7 @@
 
 
 import { BaseSystem } from "./base-system.js";
-import { parseRationalParts } from "./rational-literal.js";
+import { negateContinuedFraction, parseRationalParts } from "./rational-literal.js";
 import { toExactBigInt } from "./bigint.js";
 import { reducedProduct, reducedQuotient, reducedSum } from "./reduced-arithmetic.js";
 
@@ -1715,7 +1715,13 @@ export class Rational {
     if (typeof cfString !== "string") {
       throw new TypeError("Continued fraction must be a string");
     }
-    const cfMatch = cfString.match(/^(?:~(?=-))?(-?\d+)\.~(.*)$/);
+    // "~-3.~1~3" has first term -3; a plain leading "-" negates the whole
+    // value, as in R and RiX: "-3.~1~3" is -(3.~1~3).
+    if (/^[-+]\d/.test(cfString) && cfString.includes(".~")) {
+      const terms = Rational.#continuedFractionString(cfString.slice(1));
+      return cfString[0] === "-" ? negateContinuedFraction(terms) : terms;
+    }
+    const cfMatch = cfString.match(/^~?(-?\d+)\.~(.*)$/);
     if (!cfMatch) {
       throw new Error("Invalid continued fraction format");
     }

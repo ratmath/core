@@ -113,6 +113,11 @@ export class BaseSystem {
   }
 
   /** Whether ordinary finite/repeating fractional-place algorithms apply. */
+  /** True for place-value systems; false for RomanNumerals. */
+  get isPositional() {
+    return true;
+  }
+
   get supportsPositionalFractions() {
     return this.#radix === this.#base && this.#digitOffset === 0;
   }
@@ -437,7 +442,7 @@ export class BaseSystem {
    * @returns {boolean} True if the base systems are equivalent
    */
   equals(other) {
-    if (!(other instanceof BaseSystem)) {
+    if (!(other instanceof BaseSystem) || other.isPositional !== this.isPositional) {
       return false;
     }
 
@@ -693,8 +698,90 @@ BaseSystem.BASE64 = new BaseSystem("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGH
 // Extended base presets
 BaseSystem.BASE60 = new BaseSystem("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX".split(""), "Base 60 (Mesopotamia)");
 
-// Roman numerals - special case with custom validation
-BaseSystem.ROMAN = new BaseSystem(["I", "V", "X", "L", "C", "D", "M"], "Roman Numerals");
+/**
+ * Roman numerals: an additive-subtractive system, not a place-value base.
+ * Integers 1 to 3999 in standard form (XIV, MCMXCIV); a leading "-" negates.
+ * There is no zero and no positional fraction, so Rational.toBase gives
+ * "III/IV" for 3/4. Parsing accepts lower case and refuses non-standard
+ * spellings such as IIII, IC or VX.
+ */
+const ROMAN_VALUES = [
+  [1000n, "M"], [900n, "CM"], [500n, "D"], [400n, "CD"], [100n, "C"], [90n, "XC"],
+  [50n, "L"], [40n, "XL"], [10n, "X"], [9n, "IX"], [5n, "V"], [4n, "IV"], [1n, "I"],
+];
+
+export class RomanNumerals extends BaseSystem {
+  constructor() {
+    super(["I", "V", "X", "L", "C", "D", "M"], "Roman Numerals");
+  }
+
+  get isPositional() {
+    return false;
+  }
+
+  get supportsPositionalFractions() {
+    return false;
+  }
+
+  toDecimal(str) {
+    if (typeof str !== "string" || str.length === 0) {
+      throw new Error("Input must be a non-empty string");
+    }
+    const negative = str.startsWith("-");
+    const body = (negative ? str.slice(1) : str).toUpperCase();
+    if (!/^[IVXLCDM]+$/.test(body)) throw new Error(`Invalid Roman numeral '${str}'`);
+    let value = 0n;
+    let rest = body;
+    for (const [amount, symbol] of ROMAN_VALUES) {
+      while (rest.startsWith(symbol)) {
+        value += amount;
+        rest = rest.slice(symbol.length);
+      }
+    }
+    if (rest.length || value > 3999n || this.fromDecimal(value) !== body) {
+      throw new Error(`'${str}' is not a standard Roman numeral (1 to 3999)`);
+    }
+    return negative ? -value : value;
+  }
+
+  fromDecimal(value) {
+    if (typeof value !== "bigint") throw new Error("Value must be a BigInt");
+    if (value < 0n) return `-${this.fromDecimal(-value)}`;
+    if (value === 0n) throw new Error("Roman numerals have no zero");
+    if (value > 3999n) throw new RangeError("Roman numerals here run from 1 to 3999");
+    let out = "";
+    for (const [amount, symbol] of ROMAN_VALUES) {
+      while (value >= amount) {
+        out += symbol;
+        value -= amount;
+      }
+    }
+    return out;
+  }
+
+  isValidString(str) {
+    try {
+      this.toDecimal(str);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  withCaseSensitivity() {
+    return this;
+  }
+
+  equals(other) {
+    return other instanceof RomanNumerals;
+  }
+
+  toJSON() {
+    return { $ratmath: "BaseSystem", kind: "roman", name: "Roman Numerals" };
+  }
+}
+
+BaseSystem.ROMAN = new RomanNumerals();
 
 // Default Prefix Registrations
 BaseSystem.registerPrefix("b", BaseSystem.BINARY);

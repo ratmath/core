@@ -73,7 +73,11 @@ export class NumeralSystem {
     source = source.trim(); if (!source) fail('empty numeral');
     const shifts = source.split('_^'); if (shifts.length > 2 || shifts.length === 2 && !shifts[1]) fail('invalid radix shift');
     source = shifts[0]; let result;
-    if (source.includes('.~')) {
+    if (source.includes('.~') && source.startsWith('-')) {
+      // a plain leading - negates the whole continued fraction; ~- marks a negative first term
+      result = this.parse(source.slice(1) + (shifts.length === 2 ? `_^${shifts[1]}` : '')).negate();
+      return exact(result);
+    } else if (source.includes('.~')) {
       const parts = source.replace(/^~/, '').replace('.~', '~').split('~');
       if (parts.length < 2 || parts.length > 256) fail('continued-fraction term budget exceeded');
       const terms = parts.map(term => this.parseInteger(term));

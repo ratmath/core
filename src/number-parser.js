@@ -201,6 +201,11 @@ function parseApproximation(input) {
   }
 
   const explicitCf = value.startsWith("~");
+  // A plain leading "-" negates a whole continued fraction: "-3.~7?" is -(3.~7?).
+  if (!explicitCf && /^[-+]\d(?:_?\d)*\.~/.test(value)) {
+    const positive = parseApproximation(value.slice(1));
+    return value[0] === "-" ? positive.negate() : positive;
+  }
   const cfValue = explicitCf ? value.slice(1) : value;
   const cf = cfValue.match(new RegExp(
     `^([+-]?${DIGITS})\\.~((?:${DIGITS}(?:~${DIGITS})*)?)\\?(${DIGITS}(?:~${DIGITS})*)?$`,

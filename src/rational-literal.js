@@ -121,16 +121,20 @@ export function parseDecimalParts(input) {
 export function parseRationalParts(input) {
   let value = inputString(input, "rational");
 
-  // RiX permits an explicit leading "~" for continued fractions whose first
-  // coefficient is negative. Core also accepts the emitted form without it.
-  if (value.startsWith("~")) {
-    value = value.slice(1);
-  }
-
-  const continued = value.match(
+  // Continued fractions follow RiX: "~-3.~1~3" has first term -3 (= -9/4),
+  // while a plain leading "-" negates the whole value: "-3.~1~3" is
+  // -(3.~1~3) = -15/4. "~" may also mark a nonnegative first term.
+  const explicit = value.startsWith("~");
+  const cfText = explicit ? value.slice(1) : value;
+  const continued = cfText.match(
     new RegExp(`^([+-]?${DIGITS})\\.~(${DIGITS}(?:~${DIGITS})*)$`),
   );
   if (continued) {
+    const signText = continued[1][0];
+    if (!explicit && (signText === "-" || signText === "+")) {
+      const [n, d] = parseRationalParts(continued[0].slice(1));
+      return [signText === "-" ? -n : n, d];
+    }
     const first = BigInt(cleanDigits(continued[1], { signed: true }));
     const tail = continued[2]
       .split("~")
@@ -140,6 +144,7 @@ export function parseRationalParts(input) {
     }
     return continuedFractionParts([first, ...tail]);
   }
+  if (explicit) throw new Error(`Invalid continued fraction: ${input}`);
 
   const mixed = value.match(
     new RegExp(`^([+-]?)(${DIGITS})\\.\\.(${DIGITS})\\/(${DIGITS})$`),
@@ -182,6 +187,20 @@ export function parseRationalParts(input) {
 }
 
 // Positive tail coefficients, evaluated by the convergent recurrence.
+/**
+ * Coefficients of -x from those of x = [a0; a1, a2, ...] (tail terms
+ * positive): -x = [-a0-1; 1, a1-1, a2, ...], or [-a0-1; a2+1, a3, ...] when
+ * a1 = 1, or [-a0-1] when x = [a0; 1].
+ */
+export function negateContinuedFraction(terms) {
+  const [a0, a1, ...rest] = terms;
+  if (a1 === undefined) return [-a0];
+  if (a1 > 1n) return [-a0 - 1n, 1n, a1 - 1n, ...rest];
+  if (rest.length === 0) return [-a0 - 1n];
+  const [a2, ...more] = rest;
+  return [-a0 - 1n, a2 + 1n, ...more];
+}
+
 function continuedFractionParts(terms) {
   for (const term of terms.slice(1)) {
     if (term <= 0n) {

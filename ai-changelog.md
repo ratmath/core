@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Continued-fraction signs, base radix shift, Roman numerals
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-23
+
+James asked that `-3.~1~3` mean −(3.~1~3) everywhere and `~-3.~1~3` the negative-first-term reading, that `_^` shift by the literal's base, and that `BaseSystem.ROMAN` be real Roman numerals.
+
+All continued-fraction parsers now negate on a plain `-` (`negateContinuedFraction` in rational-literal.js turns the coefficients of x into those of −x where an array is needed). `R` reads the `_^` exponent in the literal's base and shifts by its radix (matching RiX's `fromBaseString`). `RomanNumerals` (src/base-system.js) subclasses `BaseSystem` with additive-subtractive parsing and formatting; `isPositional` is false for it, and JSON revives it as the singleton. Docs: a sign-rule section on the continued fractions page, a Roman section on the bases page, README and R template notes.
+
 ## Pre-publish review for 0.9.0
 **Model:** Claude Opus 5.5, with a math and docs review by Claude Fable 5.2
 **Date:** 2026-11-23
