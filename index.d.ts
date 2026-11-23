@@ -244,19 +244,23 @@ export class Rational {
   readonly numerator: bigint;
   readonly denominator: bigint;
 
+  add(other: CertifiedApproximation): CertifiedApproximation;
   add(other: CoreNumber): Rational | RationalInterval;
+  subtract(other: CertifiedApproximation): CertifiedApproximation;
   subtract(other: CoreNumber): Rational | RationalInterval;
+  multiply(other: CertifiedApproximation): CertifiedApproximation;
   multiply(other: CoreNumber): Rational | RationalInterval;
+  divide(other: CertifiedApproximation): CertifiedApproximation;
   divide(other: CoreNumber): Rational | RationalInterval;
   negate(): Rational;
   reciprocal(): Rational;
   pow(exponent: number | bigint): Rational;
-  equals(other: Rational): boolean;
-  compareTo(other: Rational): -1 | 0 | 1;
-  lessThan(other: Rational): boolean;
-  lessThanOrEqual(other: Rational): boolean;
-  greaterThan(other: Rational): boolean;
-  greaterThanOrEqual(other: Rational): boolean;
+  equals(other: Rational | Integer): boolean;
+  compareTo(other: Rational | Integer): -1 | 0 | 1;
+  lessThan(other: Rational | Integer): boolean;
+  lessThanOrEqual(other: Rational | Integer): boolean;
+  greaterThan(other: Rational | Integer): boolean;
+  greaterThanOrEqual(other: Rational | Integer): boolean;
   abs(): Rational;
   floor(): bigint;
   ceil(): bigint;
@@ -862,6 +866,7 @@ declare const core: {
   Rational: typeof Rational;
   RationalInterval: typeof RationalInterval;
   RationalIntervalSet: typeof RationalIntervalSet;
+  Region: typeof Region;
   RANGE_ARITHMETIC_CHECKER_ID: typeof RANGE_ARITHMETIC_CHECKER_ID;
   RANGE_OPERATION_RESULT_SCHEMA: typeof RANGE_OPERATION_RESULT_SCHEMA;
   asRationalIntervalSet: typeof asRationalIntervalSet;

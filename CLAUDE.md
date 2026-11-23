@@ -13,14 +13,15 @@ Important to note: 1) Do not modify docs/*.html or docs/assets/core.js. These ar
 ### Development & Testing
 - `bun test` - Run all tests (preferred runtime)
 - `bun test tests/specific-test.js` - Run single test file
-- `bun calc.js` - Launch terminal calculator for testing
+- `bun run test:coverage` - Tests with the coverage thresholds in bunfig.toml (lines 99%, functions 95%)
+- `bun run test:examples` - Run every script in `examples/`
+- `bun run test:pack` - `npm pack --dry-run` to check the published file list
 
-### Build Commands
-- `bun run build-web` - Build web calculator bundle (docs/calc.js)
-- `bun run build-stern-brocot` - Build Stern-Brocot tree explorer (docs/stern-brocot.js)
-- `bun run build-showcase` - Build showcase page library bundle (docs/ratmath.js)
-- `bun run build-all` - Build all web components
-- `bun run serve` - Serve web calculator locally on port 3000
+### Docs
+- `bun run docs:build` - Build the docs site from `docs-src/` into `docs/` (bundles `docs/assets/core.js`, typesets KaTeX, runs every page's code box and fails on any error)
+
+### Publishing
+- `prepublishOnly` runs coverage, examples and the pack check. Bump `version` in package.json, move CHANGELOG "Unreleased" under the new version, then `npm publish` and tag `vX.Y.Z`.
 
 ### Project Uses Bun as Primary Runtime
 Bun is the preferred runtime over Node.js. All development should target Bun first, with Node.js compatibility maintained.
@@ -28,24 +29,27 @@ Bun is the preferred runtime over Node.js. All development should target Bun fir
 ## Core Architecture
 
 ### Main Components (src/)
-- **Integer.js** - BigInt-based exact integers with factorial support
-- **Rational.js** - Exact fractions automatically reduced to lowest terms
-- **Fraction.js** - Fractions without automatic reduction
-- **RationalInterval.js** - Closed intervals with exact rational endpoints
-- **FractionInterval.js** - Intervals preserving unreduced fractions
-- **Parser.js** - Expression parser supporting mixed numbers, repeating decimals, uncertainty notation
-- **TypePromotion.js** - Automatic type conversion between number types
+- **integer.js** - BigInt-based exact integers with factorial support
+- **rational.js** - Exact fractions automatically reduced to lowest terms
+- **fraction.js** - Fractions without automatic reduction (mediants, Stern-Brocot)
+- **rational-interval.js**, **rational-interval-set.js** - Closed intervals with exact rational endpoints, and finite unions of them
+- **fraction-interval.js** - Intervals preserving unreduced fractions
+- **certified-approximation.js** - Certified approximations (value plus exact enclosure)
+- **number-parser.js**, **rational-literal.js** - Parser for exact number literals (mixed numbers, repeating decimals, uncertainty notation, continued fractions)
+- **r-template.js**, **region.js** - The `R` template (exact expressions, interval colon, betweenness chains) and `Region` / `R.region`
+- **base-system.js**, **numeral-system.js** - Arbitrary bases and versioned numeral systems
+- **type-promotion.js** - Automatic type conversion between number types
 
 ### Key Design Principles
 - **Exact Arithmetic**: All operations maintain mathematical precision using BigInt
 - **Type Promotion**: Numbers automatically promote to higher precision types when needed
-- **Template Functions**: R`` and F`` template literals for convenient parsing
+- **Template Function**: the R`` template parses exact expressions (there is no F`` template)
 - **Modular Design**: Each mathematical type is self-contained with its own operations
 
 ### Special Notation Support
 - Mixed numbers: `"5..2/3"` (5 and 2/3)
 - Repeating decimals: `"0.#3"` (exactly 1/3)
-- Uncertainty intervals: `"1.23[±0.05]"`
+- Uncertainty intervals: `"1.23[+-0.05]"`, `"1.2[3:6]"`
 - Factorials: Standard `n!` and double factorial `n!!`
 
 ## Testing Strategy
@@ -56,26 +60,11 @@ Uses Bun's built-in test framework (Jest-compatible syntax):
 - Comprehensive coverage including edge cases and mathematical precision
 - Parser tests verify exact mathematical representations
 
-## Application Interfaces
-
-### Terminal Calculator (`calc.js`)
-Interactive REPL supporting all library features. Use for manual testing and development verification.
-
-### Web Calculator (`docs/`)
-Mobile-responsive web interface built from source. Recent development focused on mobile keyboard and display improvements.
-
-## Current Development Focus
-
-Based on recent commits and todos/:
-- Mobile web calculator UI refinements
-- Template function enhancements
-- Future features include multiple base support, continued fractions, LaTeX output
-
 ## File Structure Understanding
 
 - `index.js` - Main library entry point, exports all classes
-- `examples/` - Usage demonstrations for all features
-- `documents/` - Comprehensive API documentation and development history
+- `examples/` - Usage demonstrations for all features (run by `test:examples`)
+- `index.d.ts` - TypeScript declarations shipped with the package
 - `docs/` - Built docs site served at ratmath.com/core (GitHub Pages). Generated by `bun run docs:build` from `docs-src/`; edit the sources, not `docs/*.html`
 - `bunfig.toml` - Bun configuration for testing and builds
 

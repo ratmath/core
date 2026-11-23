@@ -20,6 +20,32 @@ Betweenness chains gain strict links, unbounded ends and unions, and a new
   (``R.region`2n:x:!2n+1` ``). Methods `match`, `contains`, `intervals`,
   `breakpoints` and `within` (a `RationalIntervalSet`).
 
+### Changed
+
+- `toContinuedFractionString()` writes a negative first term as `~-3.~1~3`
+  (was `-3.~1~3`), so `R` reads the output back as the same value; `R` reads
+  a plain leading `-` as negating the whole continued fraction. Certified
+  continued-fraction prefixes print the same way (`~-4.~1?`).
+- Under `R.base(n)`, a `0` followed by one of the base's own digits is a
+  number, not a base prefix: ``R.base(16)`0b1` `` is 177 (was read as binary 1).
+
+### Fixed
+
+- `Region` with an integer-variable chain beside a fixed chain
+  (`2n:x:!2n+1 || 5:x:_`) no longer throws from `intervals`, `breakpoints`
+  and `within`.
+- `Region.breakpoints` returns points sorted and without repeats;
+  `Region.intervals` skips a piece whose strict end sits on the window's edge.
+- `Region.match` throws instead of returning an inexact `n` beyond the safe
+  integer range.
+- `R.base` with a signed-radix `BaseSystem` (such as negabinary) throws on a
+  fractional literal instead of reading it with the wrong radix.
+- `3.~?` (a continued fraction certain only in its first term, as printed by
+  `boundedContinuedFractionApproximation(q, { maxTerms: 1 })`) parses.
+- TypeScript: the default export lists `Region`; `Rational` comparisons accept
+  an `Integer`; `Rational` arithmetic with a `CertifiedApproximation` returns
+  a `CertifiedApproximation`.
+
 ## 0.8.0 — 2026-11-14
 
 `R` reads the interval colon by spacing, as RiX does, which changes two
@@ -79,8 +105,8 @@ stricter (see Changed), which can reject inputs 0.6.0 accepted.
 - `Rational.toNumber()` stays finite for parts beyond the double range.
 - `compactedDecimalInterval()` and `relativeMidDecimalInterval()` round
   outward so the text encloses the interval.
-
-- Parse signed leading decimals such as `Rational("-.5")` with an implicit zero whole part, preserving the negative sign and rejecting malformed inputs.
+- `Rational("-.5")` and other signed leading decimals parse with an implicit
+  zero whole part; malformed inputs are rejected.
 
 ## 0.6.0 — 2026-09-20
 

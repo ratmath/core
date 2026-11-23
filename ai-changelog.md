@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Pre-publish review for 0.9.0
+**Model:** Claude Opus 5.5, with a math and docs review by Claude Fable 5.2
+**Date:** 2026-11-23
+
+Fixed the bugs and doc errors a pre-publish review of 0.9.0 found; see CHANGELOG 0.9.0 "Changed" and "Fixed".
+
+Library: Region with an integer chain beside a fixed chain, sorted/deduped breakpoints, strict-edge pieces, unsafe `n` in `match`; `R.base` reads a base's own digit after 0 as a digit (not a prefix) and refuses fractions in signed-radix systems; `3.~?` parses; negative continued fractions print as `~-3.~1~3` so `R` reads them back. Types: `Region` in the default export, `Rational` comparisons with `Integer`, certified arithmetic overloads. Docs: README code fence, stale 0.6.0 install advice, `structuredClone` claim, Stern–Brocot run lengths, convergent bound (≤ for rationals), mediant-split wording, ternary output, rounding modes defined, a real float tie (2.675), region ascending and `1/2n` notes, certified negative enclosure, `_^` is always ×10. CLAUDE.md commands brought up to date. Tests in `tests/review-2026-11-23.test.js`.
+
 ## Docs rebuilt as separate pages with runnable code boxes
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-23

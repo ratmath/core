@@ -46,7 +46,7 @@ import { region } from "./region.js";
 const LITERAL = /^(?:\d(?:_?\d)*\.\.\d(?:_?\d)*\/\d(?:_?\d)*|(?:\d(?:_?\d)*)?\.?(?:\d(?:_?\d)*)?(?:\{\d+~\d+\}(?:\d(?:_?\d)*)?)*(?:#(?:\d(?:_?\d)*)?(?:\{\d+~\d+\}(?:\d(?:_?\d)*)?)*)?(?:\[[^\]]*\])?(?:\?[\d~]*)?)/;
 // Continued fractions: 3.~7~15~1, a leading ~ for a negative first term
 // (~-1.~2), optional ? tail. A plain leading - is negation, as in RiX: -3.~7 is -(3.~7).
-const CONTINUED_FRACTION = /^(?:~-?)?\d(?:_?\d)*\.~\d(?:_?\d)*(?:~\d(?:_?\d)*)*(?:\?[\d~]*)?/;
+const CONTINUED_FRACTION = /^(?:~-?)?\d(?:_?\d)*\.~(?:\d(?:_?\d)*(?:~\d(?:_?\d)*)*(?:\?[\d~]*)?|\?[\d~]*)/;
 // Base-prefixed numbers: 0xff, 0b101.1, 0b0.#01, 0z[7]66.
 const PREFIXED = /^0(?:z\[(\d+)\]|([a-zA-Z]))([0-9a-zA-Z]+(?:\.[0-9a-zA-Z]*)?(?:#[0-9a-zA-Z]+)?|\.[0-9a-zA-Z]+(?:#[0-9a-zA-Z]+)?)/;
 // Digits of a literal read in a chosen base (R.base(16)`ff.8`).
@@ -71,7 +71,10 @@ function readInBase(system, text) {
   };
   const [body, repeat = ""] = text.split("#");
   const [whole, fraction = ""] = body.split(".");
-  const radix = BigInt(system.base);
+  if ((fraction || repeat) && !system.supportsPositionalFractions) {
+    throw new SyntaxError(`R: ${system.name} has no positional fractions; write an integer or a ratio`);
+  }
+  const radix = BigInt(system.radix);
   const fractionScale = radix ** BigInt(fraction.length);
   let value = new Rational(digits(whole) * fractionScale + digits(fraction), fractionScale);
   if (repeat) {
@@ -79,6 +82,11 @@ function readInBase(system, text) {
     value = value.add(new Rational(digits(repeat), fractionScale * repeatScale));
   }
   return value.denominator === 1n ? new Integer(value.numerator) : value;
+}
+
+function isDigitOf(system, character) {
+  const map = system.charMap;
+  return map.has(character) || map.has(character.toLowerCase());
 }
 
 function prefixedSystem(match) {
@@ -98,7 +106,9 @@ export function readLiteral(rest, base) {
   const cf = rest.match(CONTINUED_FRACTION);
   if (cf) return { text: cf[0], value: parseNumber(cf[0]) };
   const prefixed = rest.match(PREFIXED);
-  if (prefixed) return { text: prefixed[0], value: readInBase(prefixedSystem(prefixed), prefixed[3]) };
+  // Under R.base(n), 0 followed by one of the base's own digits is a number,
+  // not a prefix: R.base(16)`0b1` is hex 0b1 = 177.
+  if (prefixed && !(base && isDigitOf(base, prefixed[0][1]))) return { text: prefixed[0], value: readInBase(prefixedSystem(prefixed), prefixed[3]) };
   if (base) {
     const digits = rest.match(BASE_DIGITS)?.[0];
     if (digits && digits !== ".") return { text: digits, value: readInBase(base, digits) };

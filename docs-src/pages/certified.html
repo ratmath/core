@@ -4,7 +4,7 @@
 <p class="lede">A <code>CertifiedApproximation</code> is one unknown number described two ways: a <em>candidate</em> for display, and an exact <em>enclosure</em>, a rational interval that is guaranteed to contain the true value. Only the enclosure is a promise.</p>
 
 <h2>Writing one: the <code>?</code></h2>
-<p>A <code>?</code> inside a decimal or continued fraction splits it: digits before the <code>?</code> are certain, digits after it are a guess. <code>23.456?789</code> says the true value starts \(23.456\ldots\) (so lies in \([23.456, 23.457]\)) and that the best guess is \(23.456789\). A trailing <code>?</code> with no guess, as in <code>1.5?</code>, means the value is in \([1.5, 1.6]\) and the candidate is \(1.5\).</p>
+<p>A <code>?</code> inside a decimal or continued fraction splits it: digits before the <code>?</code> are certain, digits after it are a guess. <code>23.456?789</code> says the true value starts \(23.456\ldots\) (so lies in \([23.456, 23.457]\)) and that the best guess is \(23.456789\). A trailing <code>?</code> with no guess, as in <code>1.5?</code>, means the value is in \([1.5, 1.6]\) and the candidate is \(1.5\). The certain digits truncate toward zero, so for a negative value the enclosure runs the other way: <code>-1.5?</code> is in \([-1.6, -1.5]\).</p>
 \[ \texttt{23.456?789}: \qquad \text{candidate } 23.456789, \qquad \text{enclosure } [23.456,\ 23.457]. \]
 <div data-demo="certified"></div>
 <pre><code>import { parseNumber } from "@ratmath/core";

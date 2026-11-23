@@ -17,7 +17,7 @@
   <tr><td>base prefix</td><td><code>0xff.8</code>, <code>0b0.#01</code>, <code>0z[7]66</code></td><td>\(\tfrac{511}2\), \(\tfrac13\), \(48\)</td></tr>
   <tr><td>certified</td><td><code>1.5?</code>, <code>3.~7?</code></td><td>a <a href="#certified">CertifiedApproximation</a></td></tr>
 </table></div>
-<p>A radix shift belongs to the literal before it: <code>1/2_^3</code> is \(1/(2 \cdot 10^3)\). A leading <code>-</code> is negation, so <code>-3.~7</code> is \(-(3 + \tfrac17)\); write <code>~-3.~7</code> for a negative first term. There is no <code>E</code> notation (use <code>_^</code>).</p>
+<p>A radix shift belongs to the literal before it: <code>1/2_^3</code> is \(1/(2 \cdot 10^3)\). A leading <code>-</code> is negation, so <code>-3.~7</code> is \(-(3 + \tfrac17)\); write <code>~-3.~7</code> for a negative first term. There is no <code>E</code> notation (use <code>_^</code>). The shift is always by powers of ten, with a decimal exponent, even after a base-prefixed literal: <code>0xff_^1</code> is 2550.</p>
 
 <h2>Operators</h2>
 <p>From loosest to tightest: a spaced <code>:</code>; <code>+ -</code>; <code>* /</code>; unary <code>-</code>; <code>^</code> and <code>**</code> (the same power, right-associative, integer exponents); postfix <code>!</code> and <code>!!</code>. So <code>-2^2</code> is \(-4\) and <code>2^3^2</code> is \(2^9\). A whole Rational result comes back as an <code>Integer</code>: <code>R`0.#3 * 3`</code> is the Integer 1.</p>

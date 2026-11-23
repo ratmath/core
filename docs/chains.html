@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/site.css?v=90f125101d">
+<link rel="stylesheet" href="assets/site.css?v=04123fa9c4">
 </head>
 <body>
 <div class="shell">
@@ -93,13 +93,13 @@ R`_:${x}:!-1 || 1:!${x}:_`;     // true</code></pre>
 <div data-demo="chains"></div>
 <pre><code>import { R, Region } from "@ratmath/core";
 
-const squares = R.region`2n:x:!2n+1`;   // 2n ≤ x &lt; 2n+1 for some integer n
-squares.contains(R`1/2`);              // true
-squares.match(R`5/2`);                 // { n: 1 }: which n put it there
-squares.within(0, 3).toString();       // "[0,1) U [2,3)"
-squares.breakpoints(0, 3);             // [0, 1, 2, 3]
+const even = R.region`2n:x:!2n+1`;   // 2n ≤ x &lt; 2n+1 for some integer n
+even.contains(R`1/2`);              // true
+even.match(R`5/2`);                 // { n: 1 }: which n put it there
+even.within(0, 3).toString();       // "[0,1) U [2,3)"
+even.breakpoints(0, 3);             // [0, 1, 2, 3]
 Region.parse("a:x:b", { params: { a: 1, b: "5/2" } }).contains(R`2`);   // true</code></pre>
-<p><code>intervals(lo, hi)</code> lists the pieces in a window, each <code>{ lo, hi, loStrict, hiStrict, n }</code> (<code>null</code> for an unbounded end), and <code>within(lo, hi)</code> returns them as a <a href="intervals.html#sets">RationalIntervalSet</a>. Bounds may use <code>+ - * /</code>, integer powers, parentheses and juxtaposition (<code>2n</code>). This is what <a href="https://ratmath.com/analytic/">@ratmath/analytic</a> uses for piecewise functions like <code>x^2 if 0:x:!1; 1 otherwise</code>.</p>
+<p><code>intervals(lo, hi)</code> lists the pieces in a window, each <code>{ lo, hi, loStrict, hiStrict, n }</code> (<code>null</code> for an unbounded end), and <code>within(lo, hi)</code> returns them as a <a href="intervals.html#sets">RationalIntervalSet</a>. Bounds may use <code>+ - * /</code>, integer powers, parentheses and juxtaposition (<code>2n</code>). A region reads each chain ascending (<code>lo:x:hi</code>), so <code>8:x:2</code> is empty, unlike a plain <code>R</code> chain. A coefficient written next to the integer variable binds tighter than <code>/</code>: <code>1/2n</code> means <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mn>2</mn><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">1/(2n)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mopen">(</span><span class="mord">2</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span>, which is not affine and is refused; write <code>n/2</code> for half of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span>. This is what <a href="https://ratmath.com/analytic/">@ratmath/analytic</a> uses for piecewise functions like <code>x^2 if 0:x:!1; 1 otherwise</code>.</p>
 <section class="runbox" aria-label="Runnable code">
   <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/core</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
   <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">const x = R`3/2`;
@@ -116,6 +116,6 @@ r.within(-2, 7)</textarea>
 </section>
 </main>
 </div>
-<script type="module" src="assets/pages.js?v=90f125101d"></script>
+<script type="module" src="assets/pages.js?v=04123fa9c4"></script>
 </body>
 </html>

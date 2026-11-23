@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/site.css?v=90f125101d">
+<link rel="stylesheet" href="assets/site.css?v=04123fa9c4">
 </head>
 <body>
 <div class="shell">
@@ -68,7 +68,7 @@
 
 const third = new Rational(1, 3);
 third.toRepeatingBase(BaseSystem.BINARY);           // "0.#01"
-third.toRepeatingBase(BaseSystem.TERNARY);          // "0.1"
+third.toRepeatingBase(BaseSystem.TERNARY);          // "0.1#0" (#0: it terminates)
 new Rational(1, 10).toRepeatingBaseWithPeriod(BaseSystem.BINARY);
 // { baseStr: "0.0#0011", period: 4, limitHit: false }
 third.toBase(BaseSystem.BINARY);                    // "1/11": numerator and denominator in base 2</code></pre>
@@ -118,6 +118,6 @@ bal.places("1T.1")</textarea>
 </section>
 </main>
 </div>
-<script type="module" src="assets/pages.js?v=90f125101d"></script>
+<script type="module" src="assets/pages.js?v=04123fa9c4"></script>
 </body>
 </html>

@@ -35,13 +35,13 @@ R`_:${x}:!-1 || 1:!${x}:_`;     // true</code></pre>
 <div data-demo="chains"></div>
 <pre><code>import { R, Region } from "@ratmath/core";
 
-const squares = R.region`2n:x:!2n+1`;   // 2n ≤ x &lt; 2n+1 for some integer n
-squares.contains(R`1/2`);              // true
-squares.match(R`5/2`);                 // { n: 1 }: which n put it there
-squares.within(0, 3).toString();       // "[0,1) U [2,3)"
-squares.breakpoints(0, 3);             // [0, 1, 2, 3]
+const even = R.region`2n:x:!2n+1`;   // 2n ≤ x &lt; 2n+1 for some integer n
+even.contains(R`1/2`);              // true
+even.match(R`5/2`);                 // { n: 1 }: which n put it there
+even.within(0, 3).toString();       // "[0,1) U [2,3)"
+even.breakpoints(0, 3);             // [0, 1, 2, 3]
 Region.parse("a:x:b", { params: { a: 1, b: "5/2" } }).contains(R`2`);   // true</code></pre>
-<p><code>intervals(lo, hi)</code> lists the pieces in a window, each <code>{ lo, hi, loStrict, hiStrict, n }</code> (<code>null</code> for an unbounded end), and <code>within(lo, hi)</code> returns them as a <a href="#intervals#sets">RationalIntervalSet</a>. Bounds may use <code>+ - * /</code>, integer powers, parentheses and juxtaposition (<code>2n</code>). This is what <a href="https://ratmath.com/analytic/">@ratmath/analytic</a> uses for piecewise functions like <code>x^2 if 0:x:!1; 1 otherwise</code>.</p>
+<p><code>intervals(lo, hi)</code> lists the pieces in a window, each <code>{ lo, hi, loStrict, hiStrict, n }</code> (<code>null</code> for an unbounded end), and <code>within(lo, hi)</code> returns them as a <a href="#intervals#sets">RationalIntervalSet</a>. Bounds may use <code>+ - * /</code>, integer powers, parentheses and juxtaposition (<code>2n</code>). A region reads each chain ascending (<code>lo:x:hi</code>), so <code>8:x:2</code> is empty, unlike a plain <code>R</code> chain. A coefficient written next to the integer variable binds tighter than <code>/</code>: <code>1/2n</code> means \(1/(2n)\), which is not affine and is refused; write <code>n/2</code> for half of \(n\). This is what <a href="https://ratmath.com/analytic/">@ratmath/analytic</a> uses for piecewise functions like <code>x^2 if 0:x:!1; 1 otherwise</code>.</p>
 
 <template data-runbox>
 const x = R`3/2`;

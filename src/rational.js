@@ -1715,7 +1715,7 @@ export class Rational {
     if (typeof cfString !== "string") {
       throw new TypeError("Continued fraction must be a string");
     }
-    const cfMatch = cfString.match(/^(-?\d+)\.~(.*)$/);
+    const cfMatch = cfString.match(/^(?:~(?=-))?(-?\d+)\.~(.*)$/);
     if (!cfMatch) {
       throw new Error("Invalid continued fraction format");
     }
@@ -1937,7 +1937,10 @@ export class Rational {
     const cfTerms = cf.slice(1);
 
     const suffix = complete ? "" : "~...";
-    return `${intPart}.~${cfTerms.join('~')}${suffix}`;
+    // A negative first term is written ~-3.~1~3, since R and RiX read a
+    // plain leading - as negating the whole value: -3.~1~3 is -(3 + 1/(1 + 1/3)).
+    const sign = intPart < 0n ? "~" : "";
+    return `${sign}${intPart}.~${cfTerms.join('~')}${suffix}`;
   }
 
   /**

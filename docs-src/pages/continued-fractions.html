@@ -21,7 +21,8 @@ parseContinuedFraction("~-3.~1~3").toString();  // "-9/4" (a negative first term
 <p>Cutting the expansion after \(a_k\) gives the convergent \(p_k/q_k\). They obey the recurrence</p>
 \[ p_k = a_k\,p_{k-1} + p_{k-2}, \qquad q_k = a_k\,q_{k-1} + q_{k-2}, \]
 <p>starting from \(p_{-1}/q_{-1} = 1/0\) and \(p_{-2}/q_{-2} = 0/1\). Neighbouring convergents satisfy \(p_k q_{k-1} - p_{k-1} q_k = (-1)^{k-1}\), so they alternate around the value and close in on it:</p>
-\[ \left| x - \frac{p_k}{q_k} \right| &lt; \frac{1}{q_k\, q_{k+1}} \le \frac{1}{q_k^2}. \]
+\[ \left| x - \frac{p_k}{q_k} \right| \le \frac{1}{q_k\, q_{k+1}} \le \frac{1}{q_k^2} \qquad (k \text{ before the last term}). \]
+<p>For an irrational \(x\) the first inequality is strict; for a rational it can be an equality, as with \(\left|\tfrac{355}{113} - \tfrac{22}{7}\right| = \tfrac{1}{7 \cdot 113}\).</p>
 <div data-demo="cf"></div>
 <p>A decimal like <code>3.14159265358979</code> is itself an exact rational, so its expansion is finite too; its first terms agree with those of \(\pi\) (\([3; 7, 15, 1, 292, \ldots]\)) for as long as the digits do.</p>
 
