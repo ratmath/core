@@ -72,8 +72,16 @@ function typeName(v) {
   return c.name || "";
 }
 
-/** A readable one-value display, REPL style. Library values use their own toString. */
-export function show(v, depth = 0) {
+/**
+ * A readable one-value display, REPL style. Library values use their own
+ * toString. format(value) may return a string for values it knows (a site's
+ * own display of intervals, say), or undefined; it applies at every depth.
+ */
+export function show(v, depth = 0, format) {
+  if (format && v !== null && typeof v === "object") {
+    const custom = format(v);
+    if (custom !== undefined) return custom;
+  }
   if (v === undefined) return "undefined";
   if (v === null) return "null";
   if (typeof v === "string") return depth ? JSON.stringify(v) : v;
@@ -83,7 +91,7 @@ export function show(v, depth = 0) {
   if (v instanceof Error) return `${v.name}: ${v.message}`;
   if (depth > 4) return "…";
   if (Array.isArray(v) && (v.constructor === Array || v.toString === Array.prototype.toString)) {
-    const items = v.slice(0, 200).map((x) => show(x, depth + 1));
+    const items = v.slice(0, 200).map((x) => show(x, depth + 1, format));
     return `[${items.join(", ")}${v.length > 200 ? `, … ${v.length - 200} more` : ""}]`;
   }
   if (typeof v.toString === "function" && v.toString !== Object.prototype.toString) {
@@ -94,13 +102,49 @@ export function show(v, depth = 0) {
       /* fall through */
     }
   }
-  if (v instanceof Map) return `Map(${v.size}) {${[...v].slice(0, 50).map(([k, x]) => `${show(k, depth + 1)} => ${show(x, depth + 1)}`).join(", ")}}`;
-  if (v instanceof Set) return `Set(${v.size}) {${[...v].slice(0, 50).map((x) => show(x, depth + 1)).join(", ")}}`;
+  if (v instanceof Map) return `Map(${v.size}) {${[...v].slice(0, 50).map(([k, x]) => `${show(k, depth + 1, format)} => ${show(x, depth + 1, format)}`).join(", ")}}`;
+  if (v instanceof Set) return `Set(${v.size}) {${[...v].slice(0, 50).map((x) => show(x, depth + 1, format)).join(", ")}}`;
   if (ArrayBuffer.isView(v)) return `${typeName(v)} [${Array.from(v).slice(0, 50).join(", ")}]`;
   const keys = Object.keys(v);
-  const inner = keys.slice(0, 40).map((k) => `${NAME.test(k) ? k : JSON.stringify(k)}: ${show(v[k], depth + 1)}`);
+  const inner = keys.slice(0, 40).map((k) => `${NAME.test(k) ? k : JSON.stringify(k)}: ${show(v[k], depth + 1, format)}`);
   if (keys.length > 40) inner.push(`… ${keys.length - 40} more`);
   return `${typeName(v) ? `${typeName(v)} ` : ""}{${inner.length ? ` ${inner.join(", ")} ` : ""}}`;
+}
+
+function shortQ(q, digits = 24) {
+  const s = q.toString();
+  if (s.length <= 48 || typeof q.toDecimal !== "function") return s;
+  return `${q.toDecimal(digits)}…`;
+}
+
+/**
+ * Display for RatMath values that are hard to read with toString alone:
+ * intervals with huge endpoints (shown in compact decimal notation), very long
+ * fractions (a decimal with "…"; the value itself stays exact), and
+ * Refinements (the quick preview, and how to get the certified answer).
+ */
+export function ratmathFormat(v) {
+  if (typeof v.compactedDecimalInterval === "function" && v.low && v.high) {
+    if (v.low.compareTo(v.high) === 0) return shortQ(v.low);
+    if (v.toString().length <= 48) return undefined;
+    try {
+      const c = String(v.compactedDecimalInterval());
+      if (c.length <= 90) return c;
+    } catch {
+      /* fall through */
+    }
+    return `[${shortQ(v.low, 16)}, ${shortQ(v.high, 16)}]`;
+  }
+  if (typeof v.numerator === "bigint" && typeof v.denominator === "bigint") {
+    const s = shortQ(v);
+    return s === v.toString() ? undefined : s;
+  }
+  if (typeof v.stages === "function" && typeof v.exact === "function" && "quick" in v) {
+    const q = v.quick;
+    const val = q && "value" in q ? show(q.value, 1, ratmathFormat) : show(q, 1, ratmathFormat);
+    return `Refinement { quick: ${val}${q?.trust ? ` (${q.trust})` : ""} } (.exact() gives the certified answer)`;
+  }
+  return undefined;
 }
 
 /**
@@ -111,10 +155,11 @@ export function show(v, depth = 0) {
 export async function runCode(code, scope = {}, { format } = {}) {
   const names = Object.keys(scope).filter((n) => NAME.test(n) && !RESERVED.has(n) && n !== "PRINT" && n !== "TEX");
   const prints = [];
-  const fmt = (x) => {
+  const both = (x) => {
     const custom = format ? format(x) : undefined;
-    return custom === undefined ? show(x) : custom;
+    return custom === undefined ? ratmathFormat(x) : custom;
   };
+  const fmt = (x) => show(x, 0, both);
   const PRINT = (...args) => {
     prints.push({ kind: "text", text: args.map((a) => (typeof a === "string" ? a : fmt(a))).join(" ") });
   };
@@ -126,7 +171,8 @@ export async function runCode(code, scope = {}, { format } = {}) {
   try {
     const src = stripImports(code);
     const { head, expr } = lastExpression(src);
-    const body = `"use strict";\n${head}\n${expr === null ? "" : `return (\n${expr}\n);`}`;
+    // The code runs in a block, so its own declarations may reuse library names.
+    const body = `"use strict";\n{\n${head}\n${expr === null ? "" : `return (\n${expr}\n);`}\n}`;
     const run = new AsyncFunction(...names, "PRINT", "TEX", body);
     let value = await run(...names.map((n) => scope[n]), PRINT, TEX);
     if (value && typeof value.then === "function") value = await value;

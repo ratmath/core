@@ -1,8 +1,8 @@
 // Live demos for the core docs pages, and the runnable code box at the end
 // of every page. Each <div data-demo="name"> gets the demo of that name.
-import * as C from "./core.js?v=ef7058c1bc";
-import { mountRunboxes } from "./runbox.js?v=ef7058c1bc";
-import { explorer, formsTable, typeOf } from "./explore.js?v=ef7058c1bc";
+import * as C from "./core.js?v=0718830ae0";
+import { mountRunboxes } from "./runbox.js?v=0718830ae0";
+import { explorer, formsTable, typeOf } from "./explore.js?v=0718830ae0";
 
 const { R, Rational, Integer, RationalInterval, Fraction, FractionInterval, BaseSystem, NumeralSystem, Region, parseNumber } = C;
 
