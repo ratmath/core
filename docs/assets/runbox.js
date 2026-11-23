@@ -79,7 +79,7 @@ function typeName(v) {
  */
 export function show(v, depth = 0, format) {
   if (format && v !== null && typeof v === "object") {
-    const custom = format(v);
+    const custom = format(v, depth);
     if (custom !== undefined) return custom;
   }
   if (v === undefined) return "undefined";
@@ -123,7 +123,10 @@ function shortQ(q, digits = 24) {
  * fractions (a decimal with "…"; the value itself stays exact), and
  * Refinements (the quick preview, and how to get the certified answer).
  */
-export function ratmathFormat(v) {
+export function ratmathFormat(v, depth = 0) {
+  if (depth > 0 && typeof v.toStrings === "function" && Number.isInteger(v.rows) && Number.isInteger(v.cols)) {
+    return `[${v.toStrings().map((row) => `[${row.join(", ")}]`).join(", ")}]`; // a matrix inside a structure, on one line
+  }
   if (typeof v.compactedDecimalInterval === "function" && v.low && v.high) {
     if (v.low.compareTo(v.high) === 0) return shortQ(v.low);
     if (v.toString().length <= 48) return undefined;
@@ -155,9 +158,9 @@ export function ratmathFormat(v) {
 export async function runCode(code, scope = {}, { format } = {}) {
   const names = Object.keys(scope).filter((n) => NAME.test(n) && !RESERVED.has(n) && n !== "PRINT" && n !== "TEX");
   const prints = [];
-  const both = (x) => {
-    const custom = format ? format(x) : undefined;
-    return custom === undefined ? ratmathFormat(x) : custom;
+  const both = (x, depth) => {
+    const custom = format ? format(x, depth) : undefined;
+    return custom === undefined ? ratmathFormat(x, depth) : custom;
   };
   const fmt = (x) => show(x, 0, both);
   const PRINT = (...args) => {
