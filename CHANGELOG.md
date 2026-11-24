@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- `@ratmath/core/refine`: the `Refinement` class and `live()` loop that
+  linalg, analytic and graphics each carried a copy of. A `Refinement` has a
+  float preview (`quick`), an exact answer computed by a generator
+  (`exact()`, `stages()`), and `settle()` to run it in time slices with an
+  `AbortSignal`. `live()` wires one to a slider and finishes only the latest
+  question. Types ship in `refine.d.ts`. The main entry point is unchanged.
+
 ## 0.9.0 — 2026-11-22
 
 Betweenness chains gain strict links, unbounded ends and unions, and a new

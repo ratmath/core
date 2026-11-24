@@ -151,6 +151,18 @@
   <tr><td>parseRational, parseDecimal, parseRepeatingDecimal, parseMixedNumber, parseContinuedFraction, parseInterval, parseCertifiedApproximation</td><td>one literal kind each; see <a href="parsing.html">Number literals</a></td></tr>
 </table></div>
 
+<h2 id="refine">Fast first, exact last</h2>
+<p>A separate entry point, <code>@ratmath/core/refine</code>, holds the two-step answer shared by linalg, analytic and graphics: a float preview at once, the exact answer after.</p>
+<div class="tablewrap"><table class="ref">
+  <tr><th>export</th><th>result</th></tr>
+  <tr><td>new Refinement(quick, exact)</td><td>quick: () =&gt; {value, trust}; exact: a generator that yields progress and returns {value, via}</td></tr>
+  <tr><td>.quick</td><td>{stage: "float", value, trust}, computed on first read</td></tr>
+  <tr><td>.exact(), .exactStage()</td><td>the exact value, or its record {stage: "exact", value, via}; cached</td></tr>
+  <tr><td>.stages()</td><td>generator: the preview, progress ticks, the exact record</td></tr>
+  <tr><td>.settle({signal, sliceMs, onStage, onProgress})</td><td>promise of the exact value, computed in slices; rejects with an AbortError</td></tr>
+  <tr><td>live(compute, onStage, {idleMs, sliceMs, onProgress, onError})</td><td>update(…args) for a slider: previews every call, finishes only the latest; update.cancel()</td></tr>
+</table></div>
+
 <h2>Lists</h2>
 <div class="tablewrap"><table class="ref">
   <tr><th>export</th><th>result</th></tr>

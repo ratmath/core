@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Refinement moves into Core as @ratmath/core/refine
+**Model:** Claude
+**Date:** 2026-11-24
+
+James chose Core as the home for the `Refinement` class and `live()` that linalg, analytic and graphics each copied as `src/refine.js`.
+
+`src/refine.js` (161 lines, no imports) is exported as the subpath `@ratmath/core/refine` with types in `refine.d.ts`; the main entry is untouched. The only code change from the copies is that `live()` rethrows without a helper closure when no `onError` is given. Tests in `tests/refine.test.js`, an example in `examples/refine.js`, a README section and a reference-page table. The libraries switch to it after 0.10.0 is published.
+
 ## Continued-fraction signs, base radix shift, Roman numerals
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-23
