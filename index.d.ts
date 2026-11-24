@@ -440,11 +440,16 @@ type RegionPoint = Rational | Integer | bigint | number | string;
  * `2:!x:8`, `_:x:8`, `2n:x:!2n+1` (n an integer), `_:x:!-1 || 1:!x:_`.
  */
 export class Region {
+  /** With `variables`, or text that joins chains with && or uses several variables, the result is a MultiRegion. */
+  static parse(
+    text: string,
+    options: { variables: ReadonlyArray<string>; params?: Record<string, CoreNumber | bigint | number | string> },
+  ): MultiRegion;
   static parse(
     text: string,
     options?: { variable?: string; params?: Record<string, CoreNumber | bigint | number | string> },
-  ): Region;
-  static from(spec: string | Region, options?: { variable?: string; params?: Record<string, CoreNumber | bigint | number | string> }): Region;
+  ): Region | MultiRegion;
+  static from(spec: string | Region | MultiRegion, options?: { variable?: string; variables?: ReadonlyArray<string>; params?: Record<string, CoreNumber | bigint | number | string> }): Region | MultiRegion;
   readonly variable: string;
   /** The integer variable's name, or null. */
   readonly integer: string | null;
@@ -458,6 +463,73 @@ export class Region {
   breakpoints(a: RegionPoint, b: RegionPoint): Rational[];
   /** The region inside the closed window [a, b]. */
   within(a: RegionPoint, b: RegionPoint): RationalIntervalSet;
+  toString(): string;
+}
+
+/** A point of a MultiRegion: coordinates in variable order, or by name. */
+type MultiRegionPoint = ReadonlyArray<RegionPoint> | Readonly<Record<string, RegionPoint>>;
+
+/** A box for MultiRegion: [a, b] per variable, by name or in variable order; a missing side is unbounded. */
+type MultiRegionBox =
+  | Readonly<Record<string, readonly [RegionPoint, RegionPoint] | RationalInterval>>
+  | ReadonlyArray<readonly [RegionPoint, RegionPoint] | RationalInterval | null>;
+
+/** a·z + constant ≥ 0 (> 0 when strict), with z the variables in order. */
+export interface MultiRegionConstraint {
+  readonly coefficients: ReadonlyArray<Rational>;
+  readonly constant: Rational;
+  readonly strict: boolean;
+}
+
+/** One bound of a variable: coefficients over the earlier variables, plus a constant. */
+export interface MultiRegionBound {
+  readonly coefficients: ReadonlyArray<Rational>;
+  readonly constant: Rational;
+  readonly strict: boolean;
+}
+
+/** A convex piece of a MultiRegion inside a box. */
+export interface MultiRegionCell {
+  /** Index of the || alternative it came from. */
+  readonly alternative: number;
+  /** The integers' values for this piece. */
+  readonly integers: Readonly<Record<string, number>>;
+  readonly constraints: ReadonlyArray<MultiRegionConstraint>;
+  /** Variable k lies above every lower bound and below every upper bound, each affine in variables 0..k-1. */
+  readonly bounds: ReadonlyArray<{ readonly variable: string; readonly lower: ReadonlyArray<MultiRegionBound>; readonly upper: ReadonlyArray<MultiRegionBound> }>;
+  /** Corners of the closure; `included` when the corner is in the piece. In two variables, counter-clockwise. */
+  readonly vertices: ReadonlyArray<{ readonly point: ReadonlyArray<Rational>; readonly included: boolean }>;
+  /** [low, high] per variable. */
+  readonly box: ReadonlyArray<readonly [Rational, Rational]>;
+  /** Length in one variable, area in two, null above. */
+  readonly measure: Rational | null;
+}
+
+/**
+ * Betweenness chains on several variables joined with && and ||:
+ * `0:x:1 && 0:y:x`, `n:x:!n+1 && m:y:!m+1`. Bounds are affine in the
+ * variables, parameters and integers, written in any order.
+ */
+export class MultiRegion {
+  static parse(
+    text: string,
+    options?: { variables?: ReadonlyArray<string>; params?: Record<string, CoreNumber | bigint | number | string> },
+  ): MultiRegion;
+  readonly variables: ReadonlyArray<string>;
+  readonly integers: ReadonlyArray<string>;
+  readonly dimension: number;
+  readonly params: Readonly<Record<string, unknown>>;
+  readonly text: string;
+  /** The integers' values when the point lies in the region, else null. */
+  match(point: MultiRegionPoint): Record<string, number> | null;
+  contains(point: MultiRegionPoint): boolean;
+  test(point: MultiRegionPoint): boolean;
+  /** Convex pieces inside the closed box (required when the region is unbounded). */
+  cells(box?: MultiRegionBox): MultiRegionCell[];
+  /** The free variable's set when the others are fixed, inside the window. */
+  section(fixed: Readonly<Record<string, RegionPoint>>, window: readonly [RegionPoint, RegionPoint]): RationalIntervalSet;
+  /** Distinct corner coordinates along one variable, ascending. */
+  breakpoints(variable: string, box?: MultiRegionBox): Rational[];
   toString(): string;
 }
 
@@ -786,12 +858,13 @@ export namespace R {
   ): boolean;
   /**
    * A Region from chains on a variable: R.region`2n:x:!2n+1 || 5:x:_`.
+   * Chains joined with && on several variables give a MultiRegion.
    * Interpolations are exact values used in the bounds.
    */
   function region(
     strings: TemplateStringsArray,
     ...values: Array<CoreNumber | bigint | number | string>
-  ): Region;
+  ): Region | MultiRegion;
   /** A tag reading unprefixed literals in another base: R.base(16)`ff.8`. */
   function base(radix: number | bigint | Integer | BaseSystem | string): (
     strings: TemplateStringsArray,
@@ -869,6 +942,7 @@ declare const core: {
   RationalInterval: typeof RationalInterval;
   RationalIntervalSet: typeof RationalIntervalSet;
   Region: typeof Region;
+  MultiRegion: typeof MultiRegion;
   RANGE_ARITHMETIC_CHECKER_ID: typeof RANGE_ARITHMETIC_CHECKER_ID;
   RANGE_OPERATION_RESULT_SCHEMA: typeof RANGE_OPERATION_RESULT_SCHEMA;
   asRationalIntervalSet: typeof asRationalIntervalSet;

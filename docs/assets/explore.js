@@ -1,6 +1,6 @@
 // The free-form explorer: type R expressions, keep names, see every form of
 // each answer. Used on the Explore page and (compact) on the Overview.
-import * as C from "./core.js?v=9550585b08";
+import * as C from "./core.js?v=4127a8b338";
 
 const { R, Rational, Integer, RationalInterval } = C;
 

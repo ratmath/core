@@ -155,6 +155,22 @@ A region reads each chain ascending, `lo:x:hi`, so `8:x:2` is empty (a plain
 the variable binds tighter than `/`: `1/2n` means 1/(2n), which is not affine in n
 and is refused; write `n/2` for half of n.
 
+Chains joined with `&&` describe a region on several variables, a
+`MultiRegion`. Bounds are affine in the variables (in any order), parameters
+and integers, so each piece is a convex polygon or polytope with exact corners:
+
+```js
+const T = Region.parse("0:x:1 && 0:y:x", { variables: ["x", "y"] });
+T.contains([R`1/2`, R`1/4`]);       // true
+const [cell] = T.cells();          // corners (1, 1), (0, 0), (1, 0); cell.measure is 1/2
+T.section({ x: R`1/2` }, [0, 1]);   // [0, 1/2]
+R.region`n:x:!n+1 && m:y:!m+1`.match([R`5/2`, R`-1/3`]); // { n: 2, m: -1 }
+```
+
+Each cell also gives its `bounds` in variable order (each variable between
+affine functions of the earlier ones, ready for an iterated integral). An
+unbounded region needs a box, as in `cells({ x: [0, 10], y: [0, 10] })`.
+
 ### Sums, products and ranges
 
 ```js

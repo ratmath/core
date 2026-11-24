@@ -10,6 +10,21 @@
   (`exact()`, `stages()`), and `settle()` to run it in time slices with an
   `AbortSignal`. `live()` wires one to a slider and finishes only the latest
   question. Types ship in `refine.d.ts`. The main entry point is unchanged.
+- `MultiRegion`: chains on several variables joined with `&&` and `||`, such
+  as `0:x:1 && 0:y:x` or `n:x:!n+1 && m:y:!m+1`. Bounds are affine in the
+  variables, parameters and integers and may use any variable in any order.
+  `contains` and `match` take a point (an array in variable order, or an
+  object); `cells(box)` lists the convex pieces with their bounds in variable
+  order, constraints, exact corners (marked `included` or not), bounding box
+  and length or area; `section` and `breakpoints` give one-variable views.
+  `Region.parse(text, { variables })`, `MultiRegion.parse` and `R.region`
+  build one.
+
+### Changed
+
+- `Region.parse` and `R.region` return a `MultiRegion` when the text joins
+  chains with `&&` or uses more than one variable, or when `variables` is
+  given. Chains on different variables used to throw.
 
 ## 0.9.0 — 2026-11-22
 
