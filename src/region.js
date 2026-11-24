@@ -20,17 +20,18 @@ import { Rational } from "./rational.js";
 import { RationalInterval } from "./rational-interval.js";
 import { RationalIntervalSet } from "./rational-interval-set.js";
 import { readLiteral, coreValue } from "./r-template.js";
+import { MultiRegion } from "./multi-region.js";
 
 const MAX_PIECES = 100000;
 const ZERO = new Rational(0);
 const NAME = /^[A-Za-z][A-Za-z0-9]*/;
-const REGION_OPERATORS = ["||", "**", ":!", ":", "+", "-", "*", "/", "^", "(", ")"];
+const REGION_OPERATORS = ["||", "&&", "**", ":!", ":", "+", "-", "*", "/", "^", "(", ")"];
 
-const fail = (message, Kind = SyntaxError) => {
+export const fail = (message, Kind = SyntaxError) => {
   throw new Kind(`Region: ${message}`);
 };
 
-function exactRational(value) {
+export function exactRational(value) {
   if (value instanceof Rational) return value;
   if (value instanceof Integer) return value.toRational();
   return null;
@@ -46,7 +47,7 @@ function asPoint(value) {
 
 // ---- tokens -------------------------------------------------------------------
 
-function tokenize(strings, values) {
+export function tokenize(strings, values) {
   const tokens = [];
   strings.forEach((text, part) => {
     let index = 0;
@@ -72,7 +73,8 @@ function tokenize(strings, values) {
 
 // ---- bounds: a small exact grammar with names -----------------------------------
 
-function parseRegionTokens(tokens) {
+/** Alternatives joined by ||, each a list of chains joined by &&. */
+export function parseRegionTokens(tokens) {
   let position = 0;
   const peek = () => tokens[position];
   const isOp = (value) => peek()?.kind === "op" && peek().value === value;
@@ -141,20 +143,26 @@ function parseRegionTokens(tokens) {
     return { lo, hi, loStrict, hiStrict, variable: middle.name };
   }
 
-  const alternatives = [chain()];
-  while (take("||")) alternatives.push(chain());
+  function conjunction() {
+    const chains = [chain()];
+    while (take("&&")) chains.push(chain());
+    return chains;
+  }
+
+  const alternatives = [conjunction()];
+  while (take("||")) alternatives.push(conjunction());
   if (position < tokens.length) fail(`unexpected '${peek().value ?? peek().name ?? ":"}'`);
   return alternatives;
 }
 
-function freeNames(ast, out = new Set()) {
+export function freeNames(ast, out = new Set()) {
   if (!ast) return out;
   if (ast.type === "var") out.add(ast.name);
   if (ast.type === "op") for (const a of ast.args) freeNames(a, out);
   return out;
 }
 
-function evaluate(ast, env) {
+export function evaluate(ast, env) {
   switch (ast.type) {
     case "num":
       return ast.value;
@@ -182,7 +190,7 @@ function evaluate(ast, env) {
 }
 
 /** A bound as c0 + c1·n in the integer variable (c1 = 0 without one). */
-function affine(ast, params, integer) {
+export function affine(ast, params, integer) {
   if (!integer || !freeNames(ast).has(integer)) return { c0: evaluate(ast, params), c1: ZERO };
   const at = (k) => evaluate(ast, { ...params, [integer]: new Rational(BigInt(k)) });
   const c0 = at(0);
@@ -198,7 +206,7 @@ function affine(ast, params, integer) {
 const isZero = (q) => q.numerator === 0n;
 const sign = (q) => (q.numerator > 0n ? 1 : q.numerator < 0n ? -1 : 0);
 
-function floorQ(v) {
+export function floorQ(v) {
   const a = v.numerator;
   const b = v.denominator;
   const f = a / b;
@@ -207,7 +215,7 @@ function floorQ(v) {
 
 // ---- matching -------------------------------------------------------------------
 
-function matchChain(c, x) {
+export function matchChain(c, x) {
   const fixedOk = (A, strict, lower) => {
     const order = A.c0.compareTo(x) * (lower ? 1 : -1); // lower: c0 ≤ x ; upper: x ≤ c0
     return strict ? order < 0 : order <= 0;
@@ -246,7 +254,7 @@ function matchChain(c, x) {
   return { n: safeN(n) };
 }
 
-function safeN(n) {
+export function safeN(n) {
   if (n > BigInt(Number.MAX_SAFE_INTEGER) || n < -BigInt(Number.MAX_SAFE_INTEGER)) {
     fail("the integer variable's value is beyond the safe integer range", RangeError);
   }
@@ -286,16 +294,21 @@ export class Region {
    * values used in bounds. Any other name is the integer variable.
    */
   static parse(text, options = {}) {
+    if (options.variables || isMultivariable([String(text)], [])) return new MultiRegion([String(text)], [], options);
     return new Region([String(text)], [], options);
   }
 
-  /** Region.from(text | Region, options) */
+  /** Region.from(text | Region | MultiRegion, options) */
   static from(spec, options = {}) {
-    return spec instanceof Region ? spec : Region.parse(spec, options);
+    return spec instanceof Region || spec instanceof MultiRegion ? spec : Region.parse(spec, options);
   }
 
   constructor(strings, values = [], { variable, params = {} } = {}) {
-    const chains = parseRegionTokens(tokenize(strings, values));
+    const conjunctions = parseRegionTokens(tokenize(strings, values));
+    if (conjunctions.some((c) => c.length > 1)) {
+      fail("chains joined with && make a region on several variables; use Region.parse(text, { variables }) or MultiRegion");
+    }
+    const chains = conjunctions.map((c) => c[0]);
     this.variable = variable ?? chains[0].variable;
     for (const c of chains) {
       if (c.variable !== this.variable) fail(`the middle of every chain should be ${this.variable}, found ${c.variable}`);
@@ -396,7 +409,18 @@ export class Region {
   }
 }
 
-/** R.region`2n:x:!2n+1` — a Region from a template; interpolations are exact values. */
+/**
+ * R.region`2n:x:!2n+1` — a Region from a template; interpolations are exact values.
+ * Chains joined with && (R.region`0:x:1 && 0:y:x`) give a MultiRegion.
+ */
 export function region(strings, ...values) {
+  if (isMultivariable([...strings], values)) return new MultiRegion([...strings], values);
   return new Region([...strings], values);
+}
+
+/** True when the text joins chains with && or puts different variables in the middle. */
+function isMultivariable(strings, values) {
+  const conjunctions = parseRegionTokens(tokenize(strings, values));
+  const middles = new Set(conjunctions.flat().map((c) => c.variable));
+  return conjunctions.some((c) => c.length > 1) || middles.size > 1;
 }

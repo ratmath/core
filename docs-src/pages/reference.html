@@ -14,6 +14,7 @@
   <tr><td>Fraction</td><td><code>new Fraction(p, q = 1, { allowInfinite })</code></td><td>not reduced; <code>a/0</code> allowed as ±infinity with the option</td></tr>
   <tr><td>FractionInterval</td><td><code>new FractionInterval(lowFraction, highFraction)</code></td><td>mediant splitting that keeps unreduced ends</td></tr>
   <tr><td>Region</td><td><code>Region.parse(text, { params, variable })</code>, <code>R.region`…`</code></td><td>sets of rationals from chains; see <a href="#chains">Chains</a></td></tr>
+  <tr><td>MultiRegion</td><td><code>Region.parse(text, { variables, params })</code>, <code>MultiRegion.parse</code>, <code>R.region`0:x:1 &amp;&amp; 0:y:x`</code></td><td>regions on several variables: <code>contains</code>, <code>match</code>, <code>cells</code>, <code>section</code>, <code>breakpoints</code>; see <a href="#chains">Chains</a></td></tr>
   <tr><td>BaseSystem</td><td><code>new BaseSystem(digits, name?, { radix, digitOffset, allowReserved })</code></td><td>presets <code>BINARY</code> … <code>BASE64</code>, <code>fromBase(n)</code>, prefix registry</td></tr>
   <tr><td>NumeralSystem</td><td><code>new NumeralSystem({ kind, radix, tokens })</code></td><td>kinds <code>ordinary</code>, <code>multiToken</code>, <code>balanced</code>, <code>negative</code></td></tr>
   <tr><td>TypePromotion</td><td>static methods only</td><td>Integer → Rational → RationalInterval dispatch</td></tr>

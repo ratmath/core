@@ -112,7 +112,7 @@ describe("Region", () => {
     expect(() => Region.parse("n^2:x:n^2+1")).toThrow("affine");
     expect(() => Region.parse("p:x:4", { params: { p: R`3:4` } })).toThrow("exact rational");
     expect(() => Region.parse("1:y:2", { variable: "x" })).toThrow("middle");
-    expect(() => Region.parse("1:x:2 || 1:y:2")).toThrow("middle");
+    expect(Region.parse("1:x:2 || 1:y:2").constructor.name).toBe("MultiRegion");
     expect(() => Region.parse("n:x:m")).toThrow("one integer");
     expect(() => Region.parse("1:x:2:3")).toThrow("three parts");
     expect(() => Region.parse(":x:2")).toThrow();

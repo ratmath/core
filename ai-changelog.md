@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Multivariable regions: MultiRegion
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-24
+
+James asked for the multivariable regions from the RiX plan in Core's main export; `MultiRegion` reads chains on several variables joined with `&&` and `||`.
+
+`src/multi-region.js` turns each chain into linear constraints over the variables and integers (bounds are checked to be affine) and uses exact Fourier–Motzkin elimination for feasibility, redundancy pruning, integer ranges and the per-variable `bounds` of each cell; corners come from solving every d-subset of constraints. `region.js` gains `&&` in its grammar and exports its helpers; `Region.parse`, `Region.from` and `R.region` hand multivariable text to `MultiRegion`. Tests in `tests/multi-region.test.js`, types in `index.d.ts`, a docs section on the chains page, README and CHANGELOG.
+
 ## Refinement moves into Core as @ratmath/core/refine
 **Model:** Claude
 **Date:** 2026-11-24
