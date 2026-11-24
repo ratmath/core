@@ -459,6 +459,36 @@ TypeScript declarations ship with the package. `isInteger`, `isRational`, `isRat
 and `isCoreNumber` are public type guards. Core values use tagged `toJSON()`
 output and can be restored with `JSON.parse(text, reviveCoreValue)`.
 
+## Fast first, exact last: `@ratmath/core/refine`
+
+The RatMath libraries built on Core (linalg, analytic, graphics) answer in two
+steps: a float preview at once, then the exact or certified answer. They all
+return the same small class, which lives here so there is one copy:
+
+```js
+import { Refinement, live } from "@ratmath/core/refine";
+import { Rational } from "@ratmath/core";
+
+const harmonic = (n) => new Refinement(
+  () => ({ value: Math.log(n) + 0.5772, trust: "rough" }),      // preview
+  function* () {                                                // exact, one tick per term
+    let s = new Rational(0n);
+    for (let k = 1; k <= n; k++) { s = s.add(new Rational(1n, BigInt(k))); yield { done: k, of: n }; }
+    return { value: s, via: "exact rational sum" };
+  },
+);
+
+harmonic(10).quick.value;          // 2.8798…, read at once
+harmonic(10).exact().toString();   // "7381/2520"
+await harmonic(2000).settle();     // same answer, in slices that keep a page responsive
+
+const update = live(harmonic, (stage) => console.log(stage.stage, stage.value));
+update(100); update(200);          // both preview; only the latest is finished exactly
+```
+
+`stages()` yields every stage in order, `settle({ signal })` can be aborted,
+and `live()` cancels unfinished work when a newer question arrives.
+
 ## Documentation
 
 The manual at [ratmath.com/core](https://ratmath.com/core/) has an overview,

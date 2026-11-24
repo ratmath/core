@@ -11,12 +11,18 @@
       "import": "./index.js",
       "default": "./index.js"
     },
+    "./refine": {
+      "types": "./refine.d.ts",
+      "import": "./src/refine.js",
+      "default": "./src/refine.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "CHANGELOG.md",
     "index.js",
     "index.d.ts",
+    "refine.d.ts",
     "src/"
   ],
   "sideEffects": false,
