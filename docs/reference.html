@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/site.css?v=5d6410b803">
+<link rel="stylesheet" href="assets/site.css?v=002b8f55c0">
 </head>
 <body>
 <div class="shell">
@@ -176,8 +176,8 @@
   <tr><td>.relation(q), .compare(q), .equals(q)</td><td>Relation mask; −1/0/1 (throws if undecided); certainly equal</td></tr>
   <tr><td>.value, .unit, .point, .dimensions, .toString({style, format})</td><td>the magnitude in its own unit, the Unit, whether it is a temperature point</td></tr>
   <tr><td>units.get(name), units.parse(expr), units.has(name)</td><td>a Unit; prefixes (km, MiB) and expressions ("kg*m^2/s^2", "N m", "m·s⁻²")</td></tr>
-  <tr><td>units.extend({scalars}), .define(name, definition, options), .groups(), .names()</td><td>a copy to add units to; definitions from "201.168 m", a Quantity, a Unit or {dimensions, scale, piPower}</td></tr>
-  <tr><td>Unit: .name, .dimensions, .scale, .piPower, .kind, .offset; .multiply, .divide, .inverse, .pow, .equals, .isCompatible</td><td>size is scale·π^piPower base units; kind is linear, affine or difference</td></tr>
+  <tr><td>units.extend({scalars}), .define(name, definition, options), .register(key, unit), .groups(), .names()</td><td>a copy to add units to; definitions from "201.168 m", a Quantity, a Unit or {dimensions, scale, piPower}</td></tr>
+  <tr><td>Unit: .name, .dimensions, .scale, .piPower, .kind, .offset, .prefixes; .multiply, .divide, .inverse, .pow, .equals, .isCompatible</td><td>size is scale·π^piPower base units; kind is linear, affine or difference</td></tr>
   <tr><td>constants</td><td>c, h, e, kB, NA, R, g0 (exact) and G (an interval)</td></tr>
   <tr><td>coreScalars, UnitSystem, Unit, Quantity, BASE_DIMENSIONS, dimensionsEqual, formatDimensions, isUnit, isQuantity</td><td>the pieces, for building your own system</td></tr>
 </table></div>
@@ -234,6 +234,6 @@ JSON.parse(saved, reviveCoreValue)</textarea>
 </section>
 </main>
 </div>
-<script type="module" src="assets/pages.js?v=5d6410b803"></script>
+<script type="module" src="assets/pages.js?v=002b8f55c0"></script>
 </body>
 </html>

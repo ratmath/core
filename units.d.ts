@@ -46,6 +46,8 @@ export interface UnitOptions {
   offset?: ExactRational | bigint | number | string;
   differenceUnit?: Unit | null;
   group?: string | null;
+  /** Whether the unit takes SI prefixes (km), or SI and binary prefixes (KiB). */
+  prefixes?: "SI" | "SI+binary" | null;
 }
 
 /** scale * pi^piPower base units of `dimensions`. */
@@ -59,6 +61,7 @@ export declare class Unit {
   readonly offset: ExactRational;
   readonly differenceUnit: Unit | null;
   readonly group: string | null;
+  readonly prefixes: "SI" | "SI+binary" | null;
   /** The named units this one is a product of, with exponents. */
   readonly factors: ReadonlyArray<readonly [Unit, number]>;
   readonly isNamed: boolean;
@@ -118,6 +121,8 @@ export declare class UnitSystem {
   extend(options?: { scalars?: Scalars }): UnitSystem;
   /** Definition: "201.168 m", a Quantity, a Unit, or { dimensions, scale, piPower, kind, offset }. */
   define(name: string, definition: string | Quantity | Unit | UnitOptions, options?: DefineOptions): Unit;
+  /** Make an existing Unit reachable under `key`, keeping the same object. */
+  register(key: string, unit: Unit, options?: { replace?: boolean; prefixes?: boolean }): Unit;
   has(name: string): boolean;
   get(name: string): Unit;
   parse(expression: string): Unit;

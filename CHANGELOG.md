@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `UnitSystem#register(key, unit)` makes an existing `Unit` reachable under
+  a key (its name or an alias) while keeping the same object, and a unit's
+  prefix rule now lives on the unit as `unit.prefixes` (`"SI"`,
+  `"SI+binary"` or `null`). RiX uses both to build a unit system from its
+  `.Units` collection.
+
+### Changed
+
+- Using `degC` or `degF` in a product, quotient or power now says it
+  "cannot be used in a compound unit".
+
+### Fixed
+
+- `define(name, unit)` keeps the unit's kind, offset and difference unit, so
+  a unit defined from `degC` is an affine scale rather than a plain one.
+
 ## 0.11.0 - 2026-11-26
 
 ### Added

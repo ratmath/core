@@ -190,6 +190,10 @@ export class Unit {
     if (this.kind === "affine" && this.piPower !== 0) throw new TypeError("An affine unit cannot carry pi");
     this.differenceUnit = options.differenceUnit || null;
     this.group = options.group || null;
+    this.prefixes = options.prefixes || null;
+    if (this.prefixes !== null && this.prefixes !== "SI" && this.prefixes !== "SI+binary") {
+      throw new TypeError(`Unit prefixes must be "SI" or "SI+binary"`);
+    }
     this.factors = Object.freeze(options.factors || [[this, 1]]);
     Object.freeze(this);
   }
@@ -273,7 +277,7 @@ const rsub = (a, b) => normalize(TypePromotion.subtract(a, b));
 
 function requireLinear(unit) {
   if (unit.kind === "affine") {
-    throw new Error(`Affine unit '${unit.name}' cannot be multiplied, divided or raised to a power; convert to K first`);
+    throw new Error(`Affine unit '${unit.name}' cannot be used in a compound unit (a product, quotient or power); convert to K first`);
   }
 }
 
@@ -307,7 +311,7 @@ function buildCompound(factors, dimensions, scale, piPower) {
   const name = Unit.prototype.toString.call({ isNamed: false, factors });
   Object.assign(unit, {
     name, dimensions, scale: normalize(scale), piPower, kind: "linear", offset: ZERO,
-    differenceUnit: null, group: null, factors: Object.freeze(factors),
+    differenceUnit: null, group: null, prefixes: null, factors: Object.freeze(factors),
   });
   return Object.freeze(unit);
 }
@@ -663,7 +667,10 @@ export class UnitSystem {
   define(name, definition, options = {}) {
     let spec;
     if (definition instanceof Unit) {
-      spec = { dimensions: definition.dimensions, scale: definition.scale, piPower: definition.piPower };
+      spec = {
+        dimensions: definition.dimensions, scale: definition.scale, piPower: definition.piPower,
+        kind: definition.kind, offset: definition.offset, differenceUnit: definition.differenceUnit,
+      };
     } else if (definition instanceof Quantity) {
       if (definition.unit.kind === "affine") throw new TypeError("Define a unit from a linear quantity");
       spec = this.#specFrom(definition.value, definition.unit);
@@ -681,22 +688,40 @@ export class UnitSystem {
       piPower: spec.piPower,
       kind: options.kind ?? spec.kind,
       offset: options.offset ?? spec.offset,
-      differenceUnit: options.differenceUnit,
+      differenceUnit: options.differenceUnit ?? spec.differenceUnit,
       group: options.group ?? null,
+      prefixes: options.prefixes ?? null,
     });
     const keys = [name, ...(options.aliases || [])];
     if (!options.replace) {
       for (const key of keys) if (this.#entries.has(key)) throw new Error(`Unit '${key}' is already defined`);
     }
-    const prefixes = options.prefixes || null;
-    const binary = prefixes === "SI+binary";
-    keys.forEach((key, index) => {
-      const word = index > 0 && /^\p{Ll}{3,}$/u.test(key);
-      this.#entries.set(key, { unit, prefix: prefixes ? (word ? "name" : "symbol") : null, binary });
-      if (/^\p{L}{3,}$/u.test(key)) this.#lower.set(key.toLowerCase(), key);
-    });
-    this.#units.push(unit);
+    for (const key of keys) this.#add(key, unit);
     return unit;
+  }
+
+  /**
+   * Make an existing Unit reachable under `key` (its own name, or an alias),
+   * keeping the same object. Prefixes follow `unit.prefixes`: a symbol key
+   * takes symbol prefixes (km), a lower-case word alias takes word prefixes
+   * (kilometre); `prefixes: false` registers the key without them. Throws if
+   * the key is taken, unless `replace: true`.
+   */
+  register(key, unit, { replace = false, prefixes = true } = {}) {
+    if (typeof key !== "string" || !key) throw new TypeError("register needs a name");
+    if (!(unit instanceof Unit)) throw new TypeError("register needs a Unit");
+    if (!replace && this.#entries.has(key)) throw new Error(`Unit '${key}' is already defined`);
+    this.#add(key, unit, prefixes);
+    return unit;
+  }
+
+  #add(key, unit, prefixes = true) {
+    const word = key !== unit.name && /^\p{Ll}{3,}$/u.test(key);
+    const mode = prefixes && unit.prefixes ? (word ? "name" : "symbol") : null;
+    this.#entries.set(key, { unit, prefix: mode, binary: unit.prefixes === "SI+binary" });
+    if (/^\p{L}{3,}$/u.test(key)) this.#lower.set(key.toLowerCase(), key);
+    if (!this.#units.includes(unit)) this.#units.push(unit);
+    this.#prefixed.clear();
   }
 
   #specFrom(value, unit) {
@@ -813,7 +838,7 @@ export class UnitSystem {
 
 const DIMENSIONLESS = Object.freeze(Object.assign(Object.create(Unit.prototype), {
   name: "1", dimensions: Object.freeze({}), scale: ONE, piPower: 0, kind: "linear", offset: ZERO,
-  differenceUnit: null, group: null, factors: Object.freeze([]),
+  differenceUnit: null, group: null, prefixes: null, factors: Object.freeze([]),
 }));
 
 // ---------------------------------------------------------------------------

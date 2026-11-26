@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Units: register existing units, prefixes on the unit
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-26
+
+Small additions so RiX can build a `UnitSystem` from its own `.Units` collection without copying units.
+
+`UnitSystem#register(key, unit, { replace })` adds a key for an existing Unit (identity kept; cached prefixed units are cleared). `Unit#prefixes` records which prefixes a unit takes, set by `define`'s `prefixes` option, so the prefix rule travels with the unit. `define(name, unit)` now copies kind, offset and difference unit too.
+
 ## Units move into Core as @ratmath/core/units
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-26

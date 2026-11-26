@@ -342,3 +342,48 @@ describe("constants", () => {
     expect(Object.isFrozen(constants)).toBe(true);
   });
 });
+
+describe("register and unit identity", () => {
+  test("register keeps the same Unit object under new keys", () => {
+    const sys = new UnitSystem();
+    const m = units.get("m");
+    sys.register("m", m);
+    sys.register("metre", m);
+    expect(sys.get("m")).toBe(m);
+    expect(sys.get("metre")).toBe(m);
+    expect(s(sys.get("km").scale)).toBe("1000");
+    expect(s(sys.get("kilometre").scale)).toBe("1000");
+    expect(sys.has("kmetre")).toBe(false);
+    expect(sys.get("METRE")).toBe(m);
+    expect(() => sys.register("m", m)).toThrow("already defined");
+    expect(sys.register("m", m, { replace: true })).toBe(m);
+    expect(() => sys.register("", m)).toThrow("needs a name");
+    expect(() => sys.register("x", "m")).toThrow("needs a Unit");
+    expect(sys.groups()).toEqual([{ title: "Length", units: [m] }]);
+    sys.register("M", m, { prefixes: false });
+    expect(sys.get("M")).toBe(m);
+    expect(sys.has("kM")).toBe(false);
+  });
+  test("registering a new base clears cached prefixed units", () => {
+    const sys = units.extend();
+    const before = sys.get("km");
+    sys.register("m", units.get("L"), { replace: true });
+    expect(sys.get("km")).not.toBe(before);
+    expect(s(sys.get("km").scale)).toBe("1");
+  });
+  test("prefixes live on the unit", () => {
+    expect(units.get("m").prefixes).toBe("SI");
+    expect(units.get("B").prefixes).toBe("SI+binary");
+    expect(units.get("ft").prefixes).toBe(null);
+    expect(units.get("km").prefixes).toBe(null);
+    expect(units.parse("m/s").prefixes).toBe(null);
+    expect(() => new Unit("x", { prefixes: "metric" })).toThrow("prefixes");
+  });
+  test("define from a Unit keeps its kind, offset and difference unit", () => {
+    const sys = units.extend();
+    const c = sys.define("centigrade", units.get("degC"));
+    expect(c.kind).toBe("affine");
+    expect(s(sys.quantity("100 centigrade").to("degF"))).toBe("212 degF");
+    expect(s(sys.quantity("30 centigrade").subtract(sys.quantity("10 degC")))).toBe("20 deltaDegC");
+  });
+});
