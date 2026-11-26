@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Units move into Core as @ratmath/core/units
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-26
+
+James chose a Core subpath as the one home for physical units, replacing the separate engines in RiX (`src/runtime/quantities.js`) and the calculator app (`src/engine/units.js`).
+
+`src/units.js` merges the two: RiX's affine temperatures, interval magnitudes and angles, and the calculator's wider catalogue (mass, volume, kitchen measures, electricity, data units). A unit's size is a rational times an integer power of pi, so angles stay exact without a symbolic pi; when a conversion needs pi as a number, the default scalars use an exact 35-digit interval enclosure. Magnitude arithmetic is pluggable through `UnitSystem#extend({ scalars })` so RiX can pass its exact values. Compound units print with parentheses around a multi-factor denominator (RiX printed `m/s*kg`, which parses back as m·kg/s). `K` is treated as absolute, so `300 K` converts to degC (RiX refused). Tests in `tests/units.test.js` (100% line coverage of the file), types in `units.d.ts`, an example, a docs page, a reference section and a README section. RiX and the calculator switch over in their own PRs once this is released.
+
 ## Multivariable regions: MultiRegion
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-24

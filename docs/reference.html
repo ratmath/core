@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/site.css?v=4127a8b338">
+<link rel="stylesheet" href="assets/site.css?v=5d6410b803">
 </head>
 <body>
 <div class="shell">
@@ -29,6 +29,7 @@
     <option value="chains.html">Chains and regions</option>
     <option value="parsing.html">Number literals</option>
     <option value="bases.html">Bases and numeral systems</option>
+    <option value="units.html">Units and quantities</option>
     <option value="lists.html">Lists, sums and products</option>
     <option value="fractions.html">Fractions and Stern–Brocot</option>
     <option value="promotion.html">Types, promotion and JSON</option>
@@ -49,6 +50,7 @@
     <a href="parsing.html">Number literals</a>
     <a href="bases.html">Bases and numeral systems</a>
     <div class="group">More</div>
+    <a href="units.html">Units and quantities</a>
     <a href="lists.html">Lists, sums and products</a>
     <a href="fractions.html">Fractions and Stern–Brocot</a>
     <a href="promotion.html">Types, promotion and JSON</a>
@@ -164,6 +166,22 @@
   <tr><td>live(compute, onStage, {idleMs, sliceMs, onProgress, onError})</td><td>update(…args) for a slider: previews every call, finishes only the latest; update.cancel()</td></tr>
 </table></div>
 
+<h2 id="units">Units and quantities</h2>
+<p>A separate entry point, <code>@ratmath/core/units</code>; see <a href="units.html">Units and quantities</a>.</p>
+<div class="tablewrap"><table class="ref">
+  <tr><th>export</th><th>result</th></tr>
+  <tr><td>Q(value, unit), Q("value unit")</td><td>a Quantity in the standard catalogue; value is an exact Core number, bigint, safe integer or literal string</td></tr>
+  <tr><td>.to(unit), .valueIn(unit), .toBase(), .simplify()</td><td>exact conversions; base SI units; a named coherent unit (N, J, W…)</td></tr>
+  <tr><td>.add, .subtract, .negate, .multiply, .divide, .inverse, .pow(n)</td><td>a Quantity, or a plain number when the dimensions cancel; temperature points follow affine rules</td></tr>
+  <tr><td>.relation(q), .compare(q), .equals(q)</td><td>Relation mask; −1/0/1 (throws if undecided); certainly equal</td></tr>
+  <tr><td>.value, .unit, .point, .dimensions, .toString({style, format})</td><td>the magnitude in its own unit, the Unit, whether it is a temperature point</td></tr>
+  <tr><td>units.get(name), units.parse(expr), units.has(name)</td><td>a Unit; prefixes (km, MiB) and expressions ("kg*m^2/s^2", "N m", "m·s⁻²")</td></tr>
+  <tr><td>units.extend({scalars}), .define(name, definition, options), .groups(), .names()</td><td>a copy to add units to; definitions from "201.168 m", a Quantity, a Unit or {dimensions, scale, piPower}</td></tr>
+  <tr><td>Unit: .name, .dimensions, .scale, .piPower, .kind, .offset; .multiply, .divide, .inverse, .pow, .equals, .isCompatible</td><td>size is scale·π^piPower base units; kind is linear, affine or difference</td></tr>
+  <tr><td>constants</td><td>c, h, e, kB, NA, R, g0 (exact) and G (an interval)</td></tr>
+  <tr><td>coreScalars, UnitSystem, Unit, Quantity, BASE_DIMENSIONS, dimensionsEqual, formatDimensions, isUnit, isQuantity</td><td>the pieces, for building your own system</td></tr>
+</table></div>
+
 <h2>Lists</h2>
 <div class="tablewrap"><table class="ref">
   <tr><th>export</th><th>result</th></tr>
@@ -216,6 +234,6 @@ JSON.parse(saved, reviveCoreValue)</textarea>
 </section>
 </main>
 </div>
-<script type="module" src="assets/pages.js?v=4127a8b338"></script>
+<script type="module" src="assets/pages.js?v=5d6410b803"></script>
 </body>
 </html>

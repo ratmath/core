@@ -505,6 +505,33 @@ update(100); update(200);          // both preview; only the latest is finished 
 `stages()` yields every stage in order, `settle({ signal })` can be aborted,
 and `live()` cancels unfinished work when a newer question arrives.
 
+## Units and quantities: `@ratmath/core/units`
+
+Exact numbers with units. Every conversion factor is an exact rational (times
+a power of pi for angles), so nothing is rounded until you ask for digits:
+
+```js
+import { Q, units, constants } from "@ratmath/core/units";
+
+Q("9.8 m/s^2").multiply(Q(3, "kg")).to("N");   // 147/5 N
+Q(1, "mi").to("km");                            // 25146/15625 km
+Q("20 degC").to("degF");                        // 68 degF (affine: offsets apply)
+Q("20 degC").subtract(Q("50 degF"));            // 10 deltaDegC
+Q(90, "deg").to("turn");                        // 1/4 turn (pi cancels)
+Q("1.2[3:6] m").to("cm");                       // 123:126 cm
+Q(2, "m").divide(Q(4, "cm"));                   // 50, a plain number
+units.parse("kg m² s⁻²").toString();            // "kg*m^2/s^2"
+```
+
+Dimension mismatches throw. The catalogue covers SI base and derived units
+with prefixes, US customary lengths, masses and volumes, time, angles,
+temperatures (`degC`, `degF`, `K` and the `delta…` difference units), pressure,
+energy, power, electricity and bits/bytes with binary prefixes. `constants`
+holds the exact SI defining constants and `G` as an interval.
+`units.extend()` copies the catalogue for your own `define`s, and
+`extend({ scalars })` swaps the magnitude arithmetic (RiX passes its exact pi).
+Types ship in `units.d.ts`. The main entry point is unchanged.
+
 ## Documentation
 
 The manual at [ratmath.com/core](https://ratmath.com/core/) has an overview,
