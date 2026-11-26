@@ -12,7 +12,11 @@
 import { readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { renderMath, addRunbox, stampAssets, stampLinks, KATEX_LINK } from "./docs-kit.js";
 import { runCode } from "../docs/assets/runbox.js";
-import * as core from "../index.js";
+import * as coreMain from "../index.js";
+import * as coreUnits from "../src/units.js";
+
+// What a code box sees: the main entry plus @ratmath/core/units.
+const core = { ...coreMain, ...coreUnits };
 
 export const SITE = "https://ratmath.com/core/";
 
@@ -32,6 +36,7 @@ export const PAGES = [
   { name: "parsing", title: "Number literals", description: "Repeating decimals, mixed numbers, uncertainty and continued fraction literals." },
   { name: "bases", title: "Bases and numeral systems", description: "Digits in any base, balanced and negative bases, repeating expansions." },
   { group: "More" },
+  { name: "units", title: "Units and quantities", description: "Exact unit conversions, dimension checks, temperatures and angles: @ratmath/core/units." },
   { name: "lists", title: "Lists, sums and products", description: "range, seq, sum, product and ExactList." },
   { name: "fractions", title: "Fractions and Stern–Brocot", description: "Unreduced fractions, mediants, Farey neighbours and the Stern–Brocot tree." },
   { name: "promotion", title: "Types, promotion and JSON", description: "How mixed arithmetic chooses a result type, type guards and JSON." },

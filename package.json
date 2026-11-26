@@ -16,6 +16,11 @@
       "import": "./src/refine.js",
       "default": "./src/refine.js"
     },
+    "./units": {
+      "types": "./units.d.ts",
+      "import": "./src/units.js",
+      "default": "./src/units.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -23,6 +28,7 @@
     "index.js",
     "index.d.ts",
     "refine.d.ts",
+    "units.d.ts",
     "src/"
   ],
   "sideEffects": false,
@@ -45,7 +51,8 @@
     "uncertainty",
     "exact",
     "mathematics",
-    "bigint"
+    "bigint",
+    "units"
   ],
   "author": "James Taylor",
   "repository": {

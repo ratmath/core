@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `@ratmath/core/units`: units and quantities with exact conversions. A
+  `Quantity` keeps its magnitude (any Core number, intervals included) in the
+  unit it was written in; `to`, `toBase` and `simplify` convert by exact
+  factors. Unit sizes are a rational times a power of pi, so degrees, turns
+  and parsecs stay exact. Temperatures follow affine rules (`degC`/`degF`
+  points, `delta…` differences, `K` absolute). Unit expressions parse from
+  text (`"kg*m^2/s^2"`, `"N m"`, `"m·s⁻²"`), SI and binary prefixes apply to
+  the units that take them, and `constants` holds the exact SI defining
+  constants and `G` as an interval. `units.extend({ scalars })` copies the
+  catalogue and can swap the magnitude arithmetic. Types in `units.d.ts`; a
+  new docs page. The main entry point is unchanged.
+
 ## 0.10.0 - 2026-11-24
 
 ### Added

@@ -39,6 +39,7 @@ Bun is the preferred runtime over Node.js. All development should target Bun fir
 - **r-template.js**, **region.js** - The `R` template (exact expressions, interval colon, betweenness chains) and `Region` / `R.region`
 - **base-system.js**, **numeral-system.js** - Arbitrary bases and versioned numeral systems
 - **type-promotion.js** - Automatic type conversion between number types
+- **refine.js**, **units.js** - Subpath exports `@ratmath/core/refine` (fast-then-exact Refinement) and `@ratmath/core/units` (units and quantities); types in refine.d.ts / units.d.ts
 
 ### Key Design Principles
 - **Exact Arithmetic**: All operations maintain mathematical precision using BigInt
