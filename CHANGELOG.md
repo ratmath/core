@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `Rational#roundInteger(mode)`, `floorInteger()`, `ceilInteger()` and
+  `truncInteger()` return a Core `Integer` (the older `round`, `floor`,
+  `ceil` and `trunc` still return bigints). `Integer` has the same names,
+  returning itself.
+- Place value: `Integer#digits(base)`, and `digitAt(k, base)` and
+  `placeValue(k, base)` on `Integer` and `Rational` (k = 0 ones, 1 tens,
+  -1 tenths), exact for repeating expansions too.
+- Units: a Money dimension with `USD` (`dollar`), `cent` and the coins
+  `penny`, `nickel`, `dime`, `quarter`.
+- `Quantity#toClock({ seconds, wrap, round })` writes a duration as `h:mm`
+  or `h:mm:ss`, exactly; `wrap: 12` or `24` reads it as a time of day.
+
+### Docs
+
+- The rounding section says first that the default is round half to even
+  and shows school rounding with `"half-up"`.
+
 ## 0.11.1 - 2026-11-26
 
 ### Added

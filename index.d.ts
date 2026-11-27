@@ -218,6 +218,17 @@ export class Integer {
   possibleRelationsTo(other: CoreNumber): RelationMask;
   factorial(): Integer;
   doubleFactorial(): Integer;
+  /** This integer (matches Rational#roundInteger and friends). */
+  roundInteger(mode?: RoundingMode): Integer;
+  floorInteger(): Integer;
+  ceilInteger(): Integer;
+  truncInteger(): Integer;
+  /** Digits of |this|, most significant first: 486 gives [4, 8, 6]. */
+  digits(base?: number): number[];
+  /** The digit in place k (0 = ones, 1 = tens) of |this|. */
+  digitAt(k: number, base?: number): number;
+  /** The value of the digit in place k, with this number's sign: placeValue(1) of 486 is 80. */
+  placeValue(k: number, base?: number): Integer | Rational;
   bitLength(): number;
   toJSON(): { $ratmath: "Integer"; value: string };
 
@@ -267,6 +278,18 @@ export class Rational {
   trunc(): bigint;
   round(mode?: RoundingMode): bigint;
   roundTo(places: number, mode?: RoundingMode): Rational;
+  /** The nearest integer as a Core Integer (round() returns a bigint); default half-even. */
+  roundInteger(mode?: RoundingMode): Integer;
+  /** floor() as a Core Integer. */
+  floorInteger(): Integer;
+  /** ceil() as a Core Integer. */
+  ceilInteger(): Integer;
+  /** trunc() as a Core Integer. */
+  truncInteger(): Integer;
+  /** The digit in place k of |this|: k = 0 ones, 1 tens, -1 tenths. */
+  digitAt(k: number, base?: number): number;
+  /** The value of the digit in place k, with this number's sign: placeValue(-2) of 3.47 is 7/100. */
+  placeValue(k: number, base?: number): Rational;
   toString(base?: number | BaseSystem, options?: BaseExpansionOptions): string;
   toRepeatingBase(
     baseSystem: BaseSystem,

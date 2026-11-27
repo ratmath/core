@@ -666,6 +666,73 @@ export class Rational {
     );
   }
 
+  /**
+   * The nearest integer as a Core Integer (round() returns a bigint). The
+   * default mode is half-even; school rounding is "half-up".
+   * @param {"half-even"|"half-up"|"toward-zero"|"floor"|"ceil"} [mode]
+   * @returns {Integer}
+   */
+  roundInteger(mode = "half-even") {
+    return new Rational.#Integer(this.round(mode));
+  }
+
+  /** floor() as a Core Integer. */
+  floorInteger() {
+    return new Rational.#Integer(this.floor());
+  }
+
+  /** ceil() as a Core Integer. */
+  ceilInteger() {
+    return new Rational.#Integer(this.ceil());
+  }
+
+  /** trunc() as a Core Integer. */
+  truncInteger() {
+    return new Rational.#Integer(this.trunc());
+  }
+
+  /**
+   * The digit in place k of |this| in the given base: k = 0 is the ones
+   * place, 1 the tens, -1 the tenths. Exact for every rational, including
+   * repeating expansions.
+   * @param {number} k
+   * @param {number} [base=10]
+   * @returns {number}
+   */
+  digitAt(k, base = 10) {
+    const b = Rational.#placeBase(base);
+    if (!Number.isSafeInteger(k)) throw new RangeError("Place must be a safe integer");
+    let n = this.#numerator < 0n ? -this.#numerator : this.#numerator;
+    let d = this.#denominator;
+    if (k >= 0) d *= b ** BigInt(k);
+    else n *= b ** BigInt(-k);
+    return Number((n / d) % b);
+  }
+
+  /**
+   * The value of the digit in place k (with this number's sign):
+   * placeValue(1) of 486 is 80, placeValue(-2) of 3.47 is 7/100.
+   * @param {number} k
+   * @param {number} [base=10]
+   * @returns {Rational}
+   */
+  placeValue(k, base = 10) {
+    const b = Rational.#placeBase(base);
+    const digit = BigInt(this.digitAt(k, base)) * (this.#numerator < 0n ? -1n : 1n);
+    return k >= 0 ? new Rational(digit * b ** BigInt(k)) : new Rational(digit, b ** BigInt(-k));
+  }
+
+  static #placeBase(base) {
+    if (!Number.isSafeInteger(base) || base < 2) throw new RangeError("Base must be an integer of at least 2");
+    return BigInt(base);
+  }
+
+  static #Integer = null;
+  /** @internal Integer registers itself here (the modules import each other). */
+  static _registerInteger(IntegerClass) {
+    Rational.#Integer = IntegerClass;
+  }
+
   toJSON() {
     return {
       $ratmath: "Rational",
