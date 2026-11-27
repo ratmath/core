@@ -31,6 +31,7 @@
   <tr><td>gcd, lcm, factorial, doubleFactorial, bitLength</td><td>number theory</td></tr>
   <tr><td>abs, negate, sign, isZero, isEven, isOdd, isPositive, isNegative</td><td>sign and parity</td></tr>
   <tr><td>equals, compareTo, lessThan, lessThanOrEqual, greaterThan, greaterThanOrEqual</td><td>comparisons (accept Rationals too)</td></tr>
+  <tr><td>digits(base?), digitAt(k, base?), placeValue(k, base?)</td><td>digits, most significant first; the digit in place k and its value</td></tr>
   <tr><td>toString(radix?), toBase(system), toNumber(), toRational()</td><td>conversions</td></tr>
 </table></div>
 
@@ -39,7 +40,9 @@
   <tr><th>method</th><th>result</th></tr>
   <tr><td>add, subtract, multiply, divide</td><td>exact; an interval operand gives a RationalInterval</td></tr>
   <tr><td>negate, reciprocal, abs, pow(n), E(k)</td><td>exact</td></tr>
-  <tr><td>floor(), ceil(), trunc(), round(mode?), roundTo(places, mode?)</td><td>bigints (roundTo gives a Rational); modes <code>half-even</code>, <code>half-up</code>, <code>toward-zero</code>, <code>floor</code>, <code>ceil</code></td></tr>
+  <tr><td>floor(), ceil(), trunc(), round(mode?), roundTo(places, mode?)</td><td>bigints (roundTo gives a Rational); modes <code>half-even</code> (default), <code>half-up</code> (school rounding), <code>toward-zero</code>, <code>floor</code>, <code>ceil</code></td></tr>
+  <tr><td>roundInteger(mode?), floorInteger(), ceilInteger(), truncInteger()</td><td>the same, as a Core Integer</td></tr>
+  <tr><td>digitAt(k, base?), placeValue(k, base?)</td><td>the digit in place k (0 ones, 1 tens, −1 tenths) and its value</td></tr>
   <tr><td>toString(), toMixedString(), toDecimal(digits?), toNumber()</td><td><code>"-9/4"</code>, <code>"-2..1/4"</code>, display decimal, a float</td></tr>
   <tr><td>toRepeatingDecimal(limit?, onLimit?), toRepeatingDecimalWithPeriod(opts?)</td><td><code>"0.1#6"</code>; period limit 30 by default</td></tr>
   <tr><td>computeDecimalMetadata(maxPeriod?)</td><td>whole part, pre-period, period digits and length</td></tr>

@@ -30,12 +30,12 @@ import { parseNumber } from "./number-parser.js";
 
 /** The base dimensions, in the order coherent units are written. */
 export const BASE_DIMENSIONS = Object.freeze([
-  "Mass", "Length", "Time", "Current", "Temperature", "Amount", "Luminosity", "Angle", "Information",
+  "Mass", "Length", "Time", "Current", "Temperature", "Amount", "Luminosity", "Angle", "Information", "Money",
 ]);
 
 const BASE_SYMBOLS = Object.freeze({
   Mass: "kg", Length: "m", Time: "s", Current: "A", Temperature: "K",
-  Amount: "mol", Luminosity: "cd", Angle: "rad", Information: "bit",
+  Amount: "mol", Luminosity: "cd", Angle: "rad", Information: "bit", Money: "USD",
 });
 
 const ZERO = new Integer(0n);
@@ -594,6 +594,54 @@ export class Quantity {
   }
 
   /** "49/5 m/s^2"; `{ style: "unicode" }` for "49/5 m/s²", `format` to print the magnitude. */
+  /**
+   * A duration as clock text, exactly: "3:15" or, with seconds, "3:15:00".
+   * `wrap: 12` or `24` reads it as a time of day after midnight (or noon):
+   * 12-hour clocks show 12 for 0. Without `round`, a duration that is not a
+   * whole number of the last unit shown is refused; fractional seconds that
+   * end are shown as a decimal ("0:00:01.25").
+   * @param {{ seconds?: boolean, wrap?: 12|24, round?: string }} [options]
+   * @returns {string}
+   */
+  toClock({ seconds = false, wrap, round } = {}) {
+    if (!dimensionsEqual(this.dimensions, { Time: 1 })) throw new TypeError("toClock needs a duration (a time quantity)");
+    const total = this.to("s").value;
+    if (!(total instanceof Integer || total instanceof Rational)) throw new TypeError("toClock needs an exact duration");
+    let r = total instanceof Integer ? new Rational(total.value) : total;
+    const step = seconds ? 1n : 60n;
+    if (round) {
+      r = new Rational(r.divide(new Rational(step)).round(round) * step);
+    } else if (!seconds && (r.numerator % (60n * r.denominator)) !== 0n) {
+      throw new RangeError("Duration is not a whole number of minutes (pass round, or seconds: true)");
+    }
+    const negative = r.numerator < 0n;
+    if (negative) r = r.negate();
+    const whole = r.floor();
+    let frac = r.subtract(new Rational(whole));
+    let h = whole / 3600n;
+    const m = (whole / 60n) % 60n;
+    const sec = whole % 60n;
+    if (wrap !== undefined) {
+      if (wrap !== 12 && wrap !== 24) throw new RangeError("wrap must be 12 or 24");
+      if (negative) throw new RangeError("A time of day cannot be negative");
+      h %= BigInt(wrap);
+      if (wrap === 12 && h === 0n) h = 12n;
+    }
+    const two = (n) => n.toString().padStart(2, "0");
+    let text = `${negative ? "-" : ""}${h}:${two(m)}`;
+    if (seconds) {
+      text += `:${two(sec)}`;
+      if (frac.numerator !== 0n) {
+        const dec = frac.toDecimal(40);
+        if (!/^0\.\d+$/.test(dec) || !new Rational(dec.replace("0.", ""), 10n ** BigInt(dec.length - 2)).equals(frac)) {
+          throw new RangeError("Fractional seconds do not end as a decimal (pass round)");
+        }
+        text += dec.slice(1);
+      }
+    }
+    return text;
+  }
+
   toString({ style = "ascii", format = (v) => v.toString() } = {}) {
     const unit = this.unit.toString({ style });
     return unit === "1" ? format(this.value) : `${format(this.value)} ${unit}`;
@@ -969,6 +1017,15 @@ function standardCatalogue(system) {
 
   g("Information");
   d("B", "8 bit", { prefixes: "SI+binary", aliases: ["byte", "bytes"] });
+
+  // US money: exact, so coin counts add up to exact cents.
+  g("Money");
+  d("USD", { dimensions: { Money: 1 } }, { aliases: ["dollar", "dollars"] });
+  d("cent", "1/100 USD", { aliases: ["cents", "¢"] });
+  d("penny", "1 cent", { aliases: ["pennies"] });
+  d("nickel", "5 cent", { aliases: ["nickels"] });
+  d("dime", "10 cent", { aliases: ["dimes"] });
+  d("quarter", "25 cent", { aliases: ["quarters"] });
 
   return system;
 }

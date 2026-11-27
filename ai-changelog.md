@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## School helpers: exact rounding to Integers, place value, coins, clock text
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-27
+
+Course Test batch A1 (shelf `course-test/ROADMAP.md`): adds `roundInteger`/`floorInteger`/`ceilInteger`/`truncInteger` (Core Integers; the bigint methods are untouched, as James decided), `digits`/`digitAt`/`placeValue`, a Money dimension with US coins, and `Quantity#toClock`. The rounding docs now lead with the half-even default and the `"half-up"` example.
+
+Rational reaches Integer through `Rational._registerInteger`, called at the end of integer.js, because the two modules import each other. Tests in `tests/school-helpers.test.js`.
+
 ## Units: register existing units, prefixes on the unit
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-26

@@ -1,5 +1,5 @@
 // Types for @ratmath/core/units.
-import type { Integer, Rational, RelationMask } from "./index.js";
+import type { Integer, Rational, RelationMask, RoundingMode } from "./index.js";
 
 /** Exponents of base dimensions, e.g. { Length: 1, Time: -2 }. Zero exponents are left out. */
 export type Dimensions = Readonly<Record<string, number>>;
@@ -10,7 +10,7 @@ export type MagnitudeInput = Magnitude | bigint | number | string;
 export type UnitKind = "linear" | "affine" | "difference";
 
 export declare const BASE_DIMENSIONS: readonly [
-  "Mass", "Length", "Time", "Current", "Temperature", "Amount", "Luminosity", "Angle", "Information",
+  "Mass", "Length", "Time", "Current", "Temperature", "Amount", "Luminosity", "Angle", "Information", "Money",
 ];
 
 export declare function dimensionsEqual(a: Dimensions, b: Dimensions): boolean;
@@ -100,6 +100,12 @@ export declare class Quantity {
   /** -1, 0 or 1; throws when the order is undecided. */
   compare(other: Quantity): -1 | 0 | 1;
   equals(other: unknown): boolean;
+  /**
+   * A duration as clock text, exactly: "3:15", or "3:15:00" with seconds.
+   * wrap 12 or 24 reads it as a time of day; without round, a duration that is
+   * not a whole number of the last unit shown is refused.
+   */
+  toClock(options?: { seconds?: boolean; wrap?: 12 | 24; round?: RoundingMode }): string;
   toString(options?: { style?: "ascii" | "unicode"; format?: (value: Magnitude) => string }): string;
 }
 

@@ -21,7 +21,7 @@ Q(2, "m").divide(Q(4, "cm"));                   // 50, a plain number</code></pr
 <p>SI prefixes work on the units that take them (<code>km</code>, <code>mL</code>, <code>µs</code> or <code>us</code>, <code>kWh</code>, <code>mAh</code>, <code>MeV</code>, also spelled out as <code>kilometre</code>), and binary prefixes on bits and bytes (<code>KiB</code>, <code>MiB</code>). An exact name always wins, so <code>min</code> is a minute and <code>pt</code> a pint.</p>
 
 <h2>Dimensions</h2>
-<p>The base dimensions are Mass, Length, Time, Current, Temperature, Amount, Luminosity, Angle and Information, with coherent units kg, m, s, A, K, mol, cd, rad and bit. Angle counts as a dimension so that degrees cannot be added to metres; Information so that bytes cannot be added to seconds. Adding, subtracting, comparing or converting across dimensions throws and names both dimensions.</p>
+<p>The base dimensions are Mass, Length, Time, Current, Temperature, Amount, Luminosity, Angle, Information and Money, with coherent units kg, m, s, A, K, mol, cd, rad, bit and USD. Angle counts as a dimension so that degrees cannot be added to metres; Information so that bytes cannot be added to seconds. Adding, subtracting, comparing or converting across dimensions throws and names both dimensions.</p>
 
 <h2>Angles and \(\pi\)</h2>
 <p>A unit's size is \(s\cdot\pi^k\) base units with \(s\) rational and \(k\) an integer. A degree is \(\tfrac{1}{180}\pi\) rad, a turn \(2\pi\) rad, a parsec \(\tfrac{648000}{\pi}\) au. Conversions between units with the same power of \(\pi\) stay rational: 90 degrees is exactly a quarter turn. Converting radians to degrees needs \(\pi\) itself, and then the answer is an exact interval that contains the true value, good to about 33 digits.</p>
@@ -36,6 +36,15 @@ Q(2, "m").divide(Q(4, "cm"));                   // 50, a plain number</code></pr
   <li><code>K</code> is absolute, so it works either way: <code>Q("300 K").to("degC")</code> is 26.85 °C.</li>
   <li>Multiplying, dividing or raising a <code>degC</code> or <code>degF</code> value throws; convert to <code>K</code> first.</li>
 </ul>
+
+<h2>Money</h2>
+<p>US money is exact: <code>USD</code> (also <code>dollar</code>), <code>cent</code>, and the coins <code>penny</code>, <code>nickel</code>, <code>dime</code> and <code>quarter</code>, each with its plural. Three quarters, two dimes and four pennies are exactly 99 cents: <code>Q("3 quarter").add(Q("2 dime")).add(Q("4 penny")).to("cent")</code>. Money is its own dimension, so dollars cannot be added to metres.</p>
+
+<h2>Clock times</h2>
+<p><code>toClock()</code> writes a duration as <code>h:mm</code>, and <code>toClock({ seconds: true })</code> as <code>h:mm:ss</code>: 195 minutes is <code>3:15</code>. With <code>wrap: 12</code> or <code>24</code> it reads the duration as a time of day after midnight, so 13.5 h is <code>1:30</code> on a 12-hour clock. Nothing is rounded silently: a duration that is not a whole number of minutes (or seconds) is refused unless you pass a rounding mode as <code>round</code>. Fractional seconds that end, such as 1.25 s, are written as a decimal.</p>
+<pre><code>Q("150 min").add(Q("45 min")).toClock();   // "3:15": 45 minutes after 2:30
+Q("3725 s").toClock({ seconds: true });    // "1:02:05"
+Q("100 s").toClock({ round: "half-up" });  // "0:02"</code></pre>
 
 <h2>Intervals</h2>
 <p>An interval magnitude converts by the same exact factor, so it gets no wider: <code>Q("1.2[3:6] m").to("cm")</code> is <code>123:126 cm</code>. <code>relation(other)</code> returns the Relation mask of possible orderings, <code>compare</code> returns −1, 0 or 1 and throws when overlapping intervals leave the order undecided, and <code>equals</code> is true only when the two are certainly equal.</p>
@@ -58,6 +67,7 @@ PRINT(Q("20 degC").to("degF"), "|", Q("20 degC").subtract(Q("50 degF")));
 PRINT(Q(90, "deg").to("turn"), "| 1 rad is between", Q(1, "rad").to("deg").value.low.toDecimal(20), "and", Q(1, "rad").to("deg").value.high.toDecimal(20), "deg");
 PRINT(Q("1.2[3:6] m").to("cm"));
 PRINT("R =", constants.R);
+PRINT(Q("3 quarter").add(Q("2 dime")).add(Q("4 penny")).to("cent"), "|", Q("150 min").add(Q("45 min")).toClock());
 
 const mine = units.extend();
 mine.define("furlong", "201.168 m");

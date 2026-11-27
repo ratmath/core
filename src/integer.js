@@ -443,6 +443,66 @@ export class Integer {
    * @param {number|BaseSystem} [base] - The base to convert to (default: 10)
    * @returns {string} String representation of this integer
    */
+  /** This integer (it is already one); matches Rational#roundInteger. */
+  roundInteger() {
+    return this;
+  }
+
+  /** This integer; matches Rational#floorInteger. */
+  floorInteger() {
+    return this;
+  }
+
+  /** This integer; matches Rational#ceilInteger. */
+  ceilInteger() {
+    return this;
+  }
+
+  /** This integer; matches Rational#truncInteger. */
+  truncInteger() {
+    return this;
+  }
+
+  /**
+   * The digits of |this| in a base, most significant first: 486 gives [4, 8, 6].
+   * @param {number} [base=10]
+   * @returns {number[]}
+   */
+  digits(base = 10) {
+    if (!Number.isSafeInteger(base) || base < 2) throw new RangeError("Base must be an integer of at least 2");
+    const b = BigInt(base);
+    let n = this.value < 0n ? -this.value : this.value;
+    if (n === 0n) return [0];
+    const out = [];
+    while (n > 0n) {
+      out.push(Number(n % b));
+      n /= b;
+    }
+    return out.reverse();
+  }
+
+  /**
+   * The digit in place k (0 = ones, 1 = tens, ...) of |this|.
+   * @param {number} k
+   * @param {number} [base=10]
+   * @returns {number}
+   */
+  digitAt(k, base = 10) {
+    return this.toRational().digitAt(k, base);
+  }
+
+  /**
+   * The value of the digit in place k, with this number's sign: placeValue(1)
+   * of 486 is 80. Negative k (fractional places) gives 0 for an integer.
+   * @param {number} k
+   * @param {number} [base=10]
+   * @returns {Integer|Rational}
+   */
+  placeValue(k, base = 10) {
+    const v = this.toRational().placeValue(k, base);
+    return v.denominator === 1n ? new Integer(v.numerator) : v;
+  }
+
   toString(base) {
     if (base === undefined) {
       return this.#value.toString();
@@ -626,3 +686,5 @@ export class Integer {
     return { $ratmath: "Integer", value: this.#value.toString() };
   }
 }
+
+Rational._registerInteger(Integer);
