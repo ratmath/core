@@ -12,6 +12,7 @@ const a = new Integer("9007199254740993");   // 2^53 + 1, exact
 a.value;                                     // 9007199254740993n
 Integer.from(12n).toString();                // "12"
 Integer.fromRational(new Rational(8, 4));    // Integer 2 (throws for 3/2)</code></pre>
+<p>Three different limits are worth keeping apart. A JavaScript <code>number</code> is exact only up to \(2^{53} - 1\), which is why such inputs are refused. A <code>bigint</code> has no limit in the language, but each engine has one: some Bun releases refuse a BigInt above \(2^{20}\) bits (about 315,000 digits) with a <code>RangeError</code>, where Node goes much further, and an intermediate value can cross that line even when the final answer is small. And Shelf libraries set their own budgets for work that grows quickly, such as exact orbits of the logistic map, whose denominators roughly double in length each step, and refuse with a message rather than run out.</p>
 
 <h2>Division stays exact</h2>
 <p>Dividing integers gives an <code>Integer</code> when the division is exact and a <code>Rational</code> otherwise; nothing is truncated unless you ask for it. There are two remainders, because languages disagree about negative numbers:</p>
@@ -38,7 +39,7 @@ new Integer(7).doubleFactorial();            // 105 = 7·5·3·1
 new Integer(255).bitLength();                // 8</code></pre>
 
 <h2>Digits and place value</h2>
-<p><code>digits(base = 10)</code> lists the digits of \(|n|\), most significant first. <code>digitAt(k)</code> is the digit in place \(k\) (0 is the ones place) and <code>placeValue(k)</code> is its value with the sign of \(n\): the 8 in 486 is worth 80. <code>roundInteger</code>, <code>floorInteger</code>, <code>ceilInteger</code> and <code>truncInteger</code> return the integer itself, so code can call them on any Rational or Integer.</p>
+<p><code>digits(base = 10)</code> lists the digits of \(|n|\), most significant first. <code>digitAt(k)</code> is the digit in place \(k\) (0 is the ones place) and <code>placeValue(k)</code> is its value with the sign of \(n\): the 8 in 486 is worth 80. <code>round</code>, <code>floor</code>, <code>ceil</code> and <code>trunc</code> return the integer itself, so code can call them on any Rational or Integer.</p>
 <pre><code>new Integer(486).digits();        // [4, 8, 6]
 new Integer(486).placeValue(1);   // 80
 new Integer(10).digits(2);        // [1, 0, 1, 0]</code></pre>

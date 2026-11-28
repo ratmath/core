@@ -198,11 +198,12 @@ describe("denominator grids", () => {
 describe("rounding and tagged JSON", () => {
   test("rounds exactly with explicit tie behavior", () => {
     const negative = new Rational(-5, 2);
-    expect(negative.floor()).toBe(-3n);
-    expect(negative.ceil()).toBe(-2n);
-    expect(negative.trunc()).toBe(-2n);
-    expect(negative.round()).toBe(-2n);
-    expect(negative.round("half-up")).toBe(-3n);
+    expect(negative.floor().value).toBe(-3n);
+    expect(negative.ceil().value).toBe(-2n);
+    expect(negative.trunc().value).toBe(-2n);
+    expect(negative.round().value).toBe(-3n);
+    expect(negative.round("half-even").value).toBe(-2n);
+    expect(negative.round("half-up").value).toBe(-3n);
     expect(new Rational(247, 100).roundTo(1).toString()).toBe("5/2");
     expect(new Rational(149, 1).roundTo(-2).toString()).toBe("100");
   });

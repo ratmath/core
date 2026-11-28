@@ -49,6 +49,7 @@ import {
   parseRepeatingDecimal,
 } from "./src/number-parser.js";
 import { R } from "./src/r-template.js";
+import { rounding, ROUNDING_MODES, isRoundingMode } from "./src/rounding.js";
 import { Region } from "./src/region.js";
 import { MultiRegion } from "./src/multi-region.js";
 import { product, range, seq, sum } from "./src/sequences.js";
@@ -110,6 +111,9 @@ export {
   parseRational,
   parseRepeatingDecimal,
   R,
+  rounding,
+  ROUNDING_MODES,
+  isRoundingMode,
   ExactList,
   exact,
   product,
@@ -172,6 +176,9 @@ export default {
   parseRational,
   parseRepeatingDecimal,
   R,
+  rounding,
+  ROUNDING_MODES,
+  isRoundingMode,
   ExactList,
   exact,
   product,

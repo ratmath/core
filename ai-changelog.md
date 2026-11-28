@@ -2,6 +2,48 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Rounding returns Core Integers
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+`Rational#floor/ceil/trunc/round` return an Integer (Integer has the same methods, returning itself); the unreleased `roundInteger` family is removed.
+
+James chose this after a survey of every dependent: of 44 call sites only 9 (symbolic, stats, calc-app) used the bigint directly, and those were changed to `BigInt(x.floor())`, which works on both forms. units.js toClock uses `.value`. Needs a 0.12.0 release and a Shelf peer-range bump.
+
+James then asked to flip the default rounding mode to `"half-up"` (school rounding) for `round` and `roundTo`, since RatMath is mainly educational; `"half-even"` stays as an option. RiX's Round inherits the new default; its docs (documentation/eval/objects/rational.md) say half-even and should change when RiX moves to Core 0.12.0.
+
+Also at James's request: named conventions `ROUNDING_MODES` (half-up/down/even/odd/ceil/floor, floor, ceil, toward-zero, away-from-zero), function modes (given value/floor/ceil/fraction, must return floor or ceil), and `rounding(mode)` in src/rounding.js, a rounder value rather than a global default so libraries cannot affect each other. Tests in tests/rounding-modes.test.js tabulate every mode on ties and non-ties of both signs.
+
+## Classroom clock times and dates
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+Adds src/time.js (re-exported from `@ratmath/core/units`): `clock`/`ClockTime`, `simpleDate`/`SimpleDate`, `isLeapYear`, `daysInMonth`, with a prominent not-a-date-library warning.
+
+James asked for small classroom-level helpers with a big warning pointing to real date libraries. Whole seconds only; dates are proleptic Gregorian, years 1 to 9999 (Hinnant's day-serial algorithm). Tests in tests/time.test.js walk a full 400-year cycle. Docs section on the units page.
+
+## Declare Bun 1.4.2 in engines
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+`engines` lists `"bun": ">=1.4.2"` next to Node 22, since Bun 1.4.0 caps BigInt at 2^20 bits and CI runs 1.4.2.
+
+## One contract for plain number operands
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+Every Core binary method now treats a bigint or safe-integer number like the Integer of that value and refuses other numbers with one RangeError.
+
+The shared helper is `plainIntegerOperand` in src/bigint.js; each class lifts it to its own type (Fraction n/1, a point interval for interval/set methods). `tests/plain-operands.test.js` checks every method with `2`, `2n` and `new Integer(2)`, and that 0.5, 2^60, NaN and Infinity throw. Types gain `PlainInteger`.
+
+## mediantSplit with mixed-sign denominators
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+`FractionInterval#mediantSplit` reads a negative-denominator end as (-n)/(-d) when the two denominators differ in sign, so the mediant stays inside the interval.
+
+An external QA review showed `[1/-2, 1/3]` splitting at 2. Same-sign pairs keep their component form. The integers docs page also gains a paragraph on number, engine BigInt and library limits.
+
 ## School helpers: exact rounding to Integers, place value, coins, clock text
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-27

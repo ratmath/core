@@ -153,3 +153,64 @@ export declare const constants: Readonly<{
 
 export declare function isUnit(value: unknown): value is Unit;
 export declare function isQuantity(value: unknown): value is Quantity;
+
+// ---------------------------------------------------------------------------
+// Classroom clock times and dates. NOT a date library: no time zones, daylight
+// saving, leap seconds or historical calendars. For real dates use Temporal
+// (or @js-temporal/polyfill), Luxon or date-fns.
+
+export declare const NOT_A_DATE_LIBRARY: string;
+
+/** A time of day to the second; arithmetic wraps around midnight. */
+export declare class ClockTime {
+  constructor(secondsSinceMidnight: number, daysLater?: number);
+  /** Midnights crossed by the add or subtract that made this time. */
+  readonly daysLater: number;
+  readonly hour: number;
+  readonly minute: number;
+  readonly second: number;
+  readonly secondsSinceMidnight: number;
+  readonly isAM: boolean;
+  add(duration: Quantity | string): ClockTime;
+  subtract(duration: Quantity | string): ClockTime;
+  /** Signed duration between two times on the same day. */
+  subtract(other: ClockTime): Quantity;
+  /** Elapsed time going forward to `later`, past midnight if needed. */
+  until(later: ClockTime | string): Quantity;
+  equals(other: unknown): boolean;
+  compareTo(other: ClockTime): -1 | 0 | 1;
+  toString(options?: { hours?: 12 | 24; seconds?: boolean }): string;
+  toJSON(): string;
+}
+
+export declare function clock(text: string | ClockTime): ClockTime;
+export declare function clock(hour: number, minute?: number, second?: number, meridiem?: "AM" | "PM"): ClockTime;
+
+/** A proleptic Gregorian date, years 1 to 9999, with no time or zone. */
+export declare class SimpleDate {
+  constructor(year: number, month: number, day: number);
+  readonly year: number;
+  readonly month: number;
+  readonly day: number;
+  /** Days since 1970-01-01. */
+  readonly serial: number;
+  /** 0 = Sunday ... 6 = Saturday. */
+  readonly weekday: number;
+  readonly weekdayName: string;
+  readonly monthName: string;
+  readonly dayOfYear: number;
+  readonly isLeapYear: boolean;
+  readonly daysInMonth: number;
+  addDays(n: number): SimpleDate;
+  daysUntil(other: SimpleDate | string): number;
+  equals(other: unknown): boolean;
+  compareTo(other: SimpleDate | string): -1 | 0 | 1;
+  toString(): string;
+  toLongString(): string;
+  toJSON(): string;
+}
+
+export declare function simpleDate(text: string | SimpleDate): SimpleDate;
+export declare function simpleDate(year: number, month: number, day: number): SimpleDate;
+export declare function isLeapYear(year: number): boolean;
+export declare function daysInMonth(year: number, month: number): number;

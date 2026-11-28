@@ -8,7 +8,17 @@
  */
 
 import { Rational } from './rational.js';
-import { toExactBigInt } from './bigint.js';
+import { plainIntegerOperand, toExactBigInt } from './bigint.js';
+
+// A bigint, safe-integer number or Integer operand becomes the Fraction n/1.
+function liftOperand(other) {
+  const plain = plainIntegerOperand(other);
+  if (plain !== undefined) return new Fraction(plain, 1n);
+  if (typeof other?.value === 'bigint' && other.denominator === undefined) {
+    return new Fraction(other.value, 1n);
+  }
+  return other;
+}
 
 export class Fraction {
   #numerator;
@@ -124,6 +134,7 @@ export class Fraction {
    * const sum = a.add(b); // 3/4
    */
   add(other) {
+    other = liftOperand(other);
     if (this.#denominator !== other.denominator) {
       throw new Error("Addition only supported for equal denominators");
     }
@@ -147,6 +158,7 @@ export class Fraction {
    * const diff = a.subtract(b); // 2/4
    */
   subtract(other) {
+    other = liftOperand(other);
     if (this.#denominator !== other.denominator) {
       throw new Error("Subtraction only supported for equal denominators");
     }
@@ -168,6 +180,7 @@ export class Fraction {
    * const product = a.multiply(b); // 3/8
    */
   multiply(other) {
+    other = liftOperand(other);
     return Fraction.#fromComponents(
       this.#numerator * other.numerator,
       this.#denominator * other.denominator
@@ -186,6 +199,7 @@ export class Fraction {
    * const quotient = a.divide(b); // 4/6
    */
   divide(other) {
+    other = liftOperand(other);
     if (other.numerator === 0n) {
       throw new Error("Division by zero");
     }
@@ -447,6 +461,7 @@ export class Fraction {
    * a.equals(c); // false
    */
   equals(other) {
+    other = liftOperand(other);
     return this.#numerator === other.numerator && 
            this.#denominator === other.denominator;
   }
@@ -463,6 +478,7 @@ export class Fraction {
    * a.lessThan(b); // true
    */
   lessThan(other) {
+    other = liftOperand(other);
     return Fraction.#compareValues(this, other) < 0;
   }
 
@@ -478,6 +494,7 @@ export class Fraction {
    * a.lessThanOrEqual(b); // true
    */
   lessThanOrEqual(other) {
+    other = liftOperand(other);
     return Fraction.#compareValues(this, other) <= 0;
   }
 
@@ -493,6 +510,7 @@ export class Fraction {
    * a.greaterThan(b); // true
    */
   greaterThan(other) {
+    other = liftOperand(other);
     return Fraction.#compareValues(this, other) > 0;
   }
 
@@ -508,6 +526,7 @@ export class Fraction {
    * a.greaterThanOrEqual(b); // true
    */
   greaterThanOrEqual(other) {
+    other = liftOperand(other);
     return Fraction.#compareValues(this, other) >= 0;
   }
 
@@ -565,6 +584,7 @@ export class Fraction {
    * const mediant = a.mediant(b); // 2/5
    */
   mediant(other) {
+    other = liftOperand(other);
     // Handle infinite fractions for Stern-Brocot tree
     if (this.isInfinite && other.isInfinite) {
       // Special case: mediant of -1/0 and 1/0 is 0/1

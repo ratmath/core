@@ -6,10 +6,16 @@
  * Division returns a Rational or RationalInterval if the result is not a whole number.
  */
 
-import { Rational } from "./rational.js";
+import { Rational, checkRoundingMode } from "./rational.js";
 import { RationalInterval } from "./rational-interval.js";
 import { BaseSystem } from "./base-system.js";
-import { toExactBigInt } from "./bigint.js";
+import { plainIntegerOperand, toExactBigInt } from "./bigint.js";
+
+// A bigint or safe-integer number operand becomes an Integer (see plainIntegerOperand).
+function liftPlain(other) {
+  const value = plainIntegerOperand(other);
+  return value === undefined ? other : new Integer(value);
+}
 
 // Floor operations take Integer divisors only; zero is rejected.
 function integerDivisor(other, zeroMessage) {
@@ -60,6 +66,7 @@ export class Integer {
    * @returns {Integer|Rational|RationalInterval} The sum with appropriate type
    */
   add(other) {
+    other = liftPlain(other);
     if (other?.isCertifiedApproximation === true) {
       return other._operateExactLeft("add", this);
     }
@@ -86,6 +93,7 @@ export class Integer {
    * @returns {Integer|Rational|RationalInterval} The difference with appropriate type
    */
   subtract(other) {
+    other = liftPlain(other);
     if (other?.isCertifiedApproximation === true) {
       return other._operateExactLeft("subtract", this);
     }
@@ -112,6 +120,7 @@ export class Integer {
    * @returns {Integer|Rational|RationalInterval} The product with appropriate type
    */
   multiply(other) {
+    other = liftPlain(other);
     if (other?.isCertifiedApproximation === true) {
       return other._operateExactLeft("multiply", this);
     }
@@ -139,6 +148,7 @@ export class Integer {
    * @throws {Error} If other is zero
    */
   divide(other) {
+    other = liftPlain(other);
     if (other?.isCertifiedApproximation === true) {
       return other._operateExactLeft("divide", this);
     }
@@ -171,6 +181,7 @@ export class Integer {
 
   /** Return a LESS/EQUAL/GREATER possibility mask against an enclosed value. */
   possibleRelationsTo(other) {
+    other = liftPlain(other);
     const point = new Rational(this.#value, 1n);
     if (other?.isCertifiedApproximation === true) other = other.enclosure;
     if (other instanceof Integer) return this.#value < other.value ? 1 : this.#value > other.value ? 4 : 2;
@@ -193,6 +204,7 @@ export class Integer {
    * @throws {Error} If other is zero
    */
   floorDivide(other) {
+    other = liftPlain(other);
     const divisor = integerDivisor(other, "Division by zero");
     const quotient = this.#value / divisor;
     const remainder = this.#value % divisor;
@@ -207,6 +219,7 @@ export class Integer {
    * @throws {Error} If other is zero
    */
   floorModulo(other) {
+    other = liftPlain(other);
     const divisor = integerDivisor(other, "Modulo by zero");
     const remainder = this.#value % divisor;
     return new Integer(remainder !== 0n && (remainder < 0n) !== (divisor < 0n) ? remainder + divisor : remainder);
@@ -219,6 +232,7 @@ export class Integer {
    * @throws {Error} If other is zero
    */
   divmod(other) {
+    other = liftPlain(other);
     const divisor = integerDivisor(other, "Division by zero");
     let quotient = this.#value / divisor;
     let remainder = this.#value % divisor;
@@ -236,6 +250,7 @@ export class Integer {
    * @throws {Error} If other is zero
    */
   modulo(other) {
+    other = liftPlain(other);
     if (other.value === 0n) {
       throw new Error("Modulo by zero");
     }
@@ -287,6 +302,7 @@ export class Integer {
    * @returns {boolean} True if the integers are equal
    */
   equals(other) {
+    other = liftPlain(other);
     if (other instanceof Rational) {
       return other.denominator === 1n && this.#value === other.numerator;
     }
@@ -307,6 +323,7 @@ export class Integer {
   // -1, 0 or 1 against an Integer or Rational; NaN when not comparable, so
   // every relational test below is false for such operands, as before.
   #order(other) {
+    other = liftPlain(other);
     // a ⋛ p/q  <=>  aq ⋛ p, since q > 0
     let left = this.#value;
     let right;
@@ -407,6 +424,7 @@ export class Integer {
    * @returns {Integer} The GCD as a new Integer
    */
   gcd(other) {
+    other = liftPlain(other);
     let a = this.#value < 0n ? -this.#value : this.#value;
     let b = other.value < 0n ? -other.value : other.value;
 
@@ -425,6 +443,7 @@ export class Integer {
    * @returns {Integer} The LCM as a new Integer
    */
   lcm(other) {
+    other = liftPlain(other);
     if (this.#value === 0n || other.value === 0n) {
       return new Integer(0);
     }
@@ -443,23 +462,24 @@ export class Integer {
    * @param {number|BaseSystem} [base] - The base to convert to (default: 10)
    * @returns {string} String representation of this integer
    */
-  /** This integer (it is already one); matches Rational#roundInteger. */
-  roundInteger() {
+  /** This integer: rounding an Integer leaves it unchanged (matches Rational#round). */
+  round(mode = "half-up") {
+    checkRoundingMode(mode);
     return this;
   }
 
-  /** This integer; matches Rational#floorInteger. */
-  floorInteger() {
+  /** This integer (matches Rational#floor). */
+  floor() {
     return this;
   }
 
-  /** This integer; matches Rational#ceilInteger. */
-  ceilInteger() {
+  /** This integer (matches Rational#ceil). */
+  ceil() {
     return this;
   }
 
-  /** This integer; matches Rational#truncInteger. */
-  truncInteger() {
+  /** This integer (matches Rational#trunc). */
+  trunc() {
     return this;
   }
 

@@ -56,11 +56,25 @@ export class FractionInterval {
   /**
    * Creates a single mediant partition of the interval.
    * Splits the interval into two parts using the mediant of the endpoints.
+   * The two parts meet at the mediant, lie inside the interval and cover it,
+   * whatever the signs of the endpoints' denominators.
    *
    * @returns {FractionInterval[]} Array of two subintervals
    */
   mediantSplit() {
-    const mediant = Fraction.mediant(this.#low, this.#high);
+    // The mediant lies between its parents only when their denominators have the
+    // same sign. Core keeps signed component pairs such as 1/-2, so when the
+    // signs differ, the negative-denominator end is read as (-n)/(-d) for the
+    // mediant: same value, same scale. (1/-2 and 1/3 would otherwise give 2/1,
+    // outside [-1/2, 1/3].)
+    let [a, b] = [this.#low, this.#high];
+    const sa = a.denominator < 0n ? -1 : a.denominator > 0n ? 1 : 0;
+    const sb = b.denominator < 0n ? -1 : b.denominator > 0n ? 1 : 0;
+    if (sa !== sb) {
+      const flip = (f) => (f.denominator < 0n ? new Fraction(-f.numerator, -f.denominator) : f);
+      [a, b] = [flip(a), flip(b)];
+    }
+    const mediant = Fraction.mediant(a, b);
     return [
       new FractionInterval(this.#low, mediant),
       new FractionInterval(mediant, this.#high),
@@ -203,6 +217,11 @@ export class FractionInterval {
    * @returns {boolean} True if the intervals are equal
    */
   equals(other) {
+    // A number, bigint, Integer or Fraction is the one-point interval [x, x].
+    if (other?.low === undefined) {
+      const point = new Fraction(1n, 1n).multiply(other);
+      return this.#low.equals(point) && this.#high.equals(point);
+    }
     return this.#low.equals(other.low) && this.#high.equals(other.high);
   }
 

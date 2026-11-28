@@ -2,7 +2,7 @@ import { Integer } from "./integer.js";
 import { Rational } from "./rational.js";
 import { RationalInterval } from "./rational-interval.js";
 import { BaseSystem } from "./base-system.js";
-import { toExactBigInt } from "./bigint.js";
+import { plainIntegerOperand, toExactBigInt } from "./bigint.js";
 
 export const Relation = Object.freeze({
   LESS: 0b001,
@@ -64,6 +64,8 @@ function normalize(candidate, enclosure, options = {}) {
 }
 
 function operand(value) {
+  const plain = plainIntegerOperand(value);
+  if (plain !== undefined) value = new Integer(plain);
   if (value instanceof CertifiedApproximation) {
     return { candidate: value.candidate, enclosure: value.enclosure, approximation: true };
   }
@@ -146,6 +148,8 @@ function serializeSourceId(sourceId) {
 }
 
 function relationEnclosure(value) {
+  const plain = plainIntegerOperand(value);
+  if (plain !== undefined) value = new Integer(plain);
   if (value instanceof CertifiedApproximation) return value.enclosure;
   if (value instanceof RationalInterval) return value;
   if (value instanceof Integer || value instanceof Rational) return pointInterval(value);

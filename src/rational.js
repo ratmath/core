@@ -8,7 +8,7 @@
 
 import { BaseSystem } from "./base-system.js";
 import { negateContinuedFraction, parseRationalParts } from "./rational-literal.js";
-import { toExactBigInt } from "./bigint.js";
+import { plainIntegerOperand, toExactBigInt } from "./bigint.js";
 import { reducedProduct, reducedQuotient, reducedSum } from "./reduced-arithmetic.js";
 
 const POWERS_OF_5 = Object.freeze({
@@ -25,20 +25,81 @@ const bitLength = function (int) {
   return int < 0n ? (-int).toString(2).length : int.toString(2).length;
 }
 
-const roundedQuotient = function (numerator, denominator, mode) {
-  const quotient = numerator / denominator;
-  const remainder = numerator % denominator;
-  if (remainder === 0n || mode === "toward-zero") return quotient;
-  if (mode === "floor") return numerator < 0n ? quotient - 1n : quotient;
-  if (mode === "ceil") return numerator > 0n ? quotient + 1n : quotient;
+/**
+ * The named rounding conventions. A tie is a value exactly halfway between
+ * two integers; the half-* modes differ only on ties.
+ */
+export const ROUNDING_MODES = Object.freeze([
+  "half-up",        // ties away from zero (school rounding; the default)
+  "half-down",      // ties toward zero
+  "half-even",      // ties to the even neighbour (banker's rounding)
+  "half-odd",       // ties to the odd neighbour
+  "half-ceil",      // ties toward +infinity
+  "half-floor",     // ties toward -infinity
+  "floor",          // always down
+  "ceil",           // always up
+  "toward-zero",    // truncate
+  "away-from-zero", // always away from zero
+]);
+const NAMED_MODES = new Set(ROUNDING_MODES);
 
-  const twiceRemainder = (remainder < 0n ? -remainder : remainder) * 2n;
-  if (twiceRemainder < denominator) return quotient;
-  const direction = numerator < 0n ? -1n : 1n;
-  if (twiceRemainder > denominator || mode === "half-up") {
-    return quotient + direction;
+// floor(n/d) for d > 0.
+const floorQuotient = (numerator, denominator) => {
+  const q = numerator / denominator;
+  return numerator % denominator !== 0n && numerator < 0n ? q - 1n : q;
+};
+
+/** True for a rounding mode: a name in ROUNDING_MODES or a function. */
+export function isRoundingMode(mode) {
+  return typeof mode === "function" || NAMED_MODES.has(mode);
+}
+
+export function checkRoundingMode(mode) {
+  if (!isRoundingMode(mode)) {
+    throw new TypeError(`Unknown rounding mode ${JSON.stringify(mode)}; use one of ${ROUNDING_MODES.join(", ")} or a function`);
   }
-  return quotient % 2n === 0n ? quotient : quotient + direction;
+  return mode;
+}
+
+/**
+ * Round n/d (d > 0) to an integer bigint. A function mode is called only
+ * when n/d is not an integer, with { value, floor, ceil, fraction }
+ * (fraction = value - floor, strictly between 0 and 1), and must return
+ * floor or ceil (an Integer, bigint or safe integer).
+ */
+const roundedQuotient = function (numerator, denominator, mode, makeInfo) {
+  const f = floorQuotient(numerator, denominator);
+  const r = numerator - f * denominator; // 0 <= r < d
+  if (r === 0n) return f;
+  const c = f + 1n;
+  if (typeof mode === "function") {
+    const out = mode(makeInfo(numerator, denominator, f, r));
+    const big = typeof out === "bigint" ? out
+      : typeof out === "number" && Number.isSafeInteger(out) ? BigInt(out)
+      : typeof out?.value === "bigint" ? out.value : null;
+    if (big !== f && big !== c) {
+      throw new RangeError("A custom rounding function must return the floor or the ceiling of the value it is given");
+    }
+    return big;
+  }
+  const negative = numerator < 0n;
+  switch (mode) {
+    case "floor": return f;
+    case "ceil": return c;
+    case "toward-zero": return negative ? c : f;
+    case "away-from-zero": return negative ? f : c;
+  }
+  const twice = 2n * r;
+  if (twice < denominator) return f;
+  if (twice > denominator) return c;
+  switch (mode) { // an exact tie
+    case "half-up": return negative ? f : c;
+    case "half-down": return negative ? c : f;
+    case "half-even": return f % 2n === 0n ? f : c;
+    case "half-odd": return f % 2n === 0n ? c : f;
+    case "half-ceil": return c;
+    default: return f; // "half-floor"; callers check the mode first
+  }
 };
 
 const continuedFractionOptions = function (options, defaultLimit) {
@@ -97,6 +158,8 @@ function positiveDenominatorBound(value) {
 
 // Rational comparisons also accept Integer operands (denominator 1).
 function exactParts(other) {
+  const plain = plainIntegerOperand(other);
+  if (plain !== undefined) return [plain, 1n];
   if (typeof other?.value === "bigint" && other.denominator === undefined) {
     return [other.value, 1n];
   }
@@ -230,6 +293,8 @@ export class Rational {
    * @private
    */
   static #canonicalParts(other) {
+    const plain = plainIntegerOperand(other);
+    if (plain !== undefined) return [plain, 1n];
     if (other == null || typeof other !== "object") return null;
     const prototype = Object.getPrototypeOf(other);
     if (prototype === Rational.prototype) {
@@ -490,6 +555,7 @@ export class Rational {
 
   /** Return a LESS/EQUAL/GREATER possibility mask against an enclosed value. */
   possibleRelationsTo(other) {
+    if (plainIntegerOperand(other) !== undefined) other = new Rational(other);
     if (other?.isCertifiedApproximation === true) other = other.enclosure;
     if (other?.constructor?.name === "Integer") other = new Rational(other.value, 1n);
     if (other instanceof Rational) return this.lessThan(other) ? 1 : this.greaterThan(other) ? 4 : 2;
@@ -628,67 +694,59 @@ export class Rational {
       : new Rational(this.#numerator, this.#denominator);
   }
 
+  /** The greatest Integer <= this. The bigint is `.value`; a JS number is `.toNumber()`. */
   floor() {
-    return roundedQuotient(this.#numerator, this.#denominator, "floor");
+    return new Rational.#Integer(roundedQuotient(this.#numerator, this.#denominator, "floor"));
   }
 
+  /** The least Integer >= this. */
   ceil() {
-    return roundedQuotient(this.#numerator, this.#denominator, "ceil");
+    return new Rational.#Integer(roundedQuotient(this.#numerator, this.#denominator, "ceil"));
   }
 
+  /** The Integer part, rounding toward zero. */
   trunc() {
-    return roundedQuotient(this.#numerator, this.#denominator, "toward-zero");
+    return new Rational.#Integer(roundedQuotient(this.#numerator, this.#denominator, "toward-zero"));
   }
 
-  round(mode = "half-even") {
-    if (!new Set(["half-even", "half-up", "toward-zero", "floor", "ceil"]).has(mode)) {
-      throw new TypeError("Unknown rounding mode");
-    }
-    return roundedQuotient(this.#numerator, this.#denominator, mode);
+  /**
+   * The nearest Integer. The default is school rounding, "half-up" (ties
+   * away from zero: 5/2 -> 3, -5/2 -> -3); "half-even" is banker's rounding.
+   * See ROUNDING_MODES for every name; a function makes your own convention.
+   * @param {string|Function} [mode]
+   * @returns {Integer}
+   */
+  round(mode = "half-up") {
+    checkRoundingMode(mode);
+    return new Rational.#Integer(roundedQuotient(this.#numerator, this.#denominator, mode, Rational.#roundingInfo));
   }
 
-  roundTo(places, mode = "half-even") {
+  // What a custom rounding function sees for the value n/d with floor f and remainder r.
+  static #roundingInfo(numerator, denominator, f, r) {
+    const I = Rational.#Integer;
+    return Object.freeze({
+      value: new Rational(numerator, denominator),
+      floor: new I(f),
+      ceil: new I(f + 1n),
+      fraction: new Rational(r, denominator),
+    });
+  }
+
+  roundTo(places, mode = "half-up") {
     if (!Number.isSafeInteger(places)) {
       throw new RangeError("Decimal places must be a safe integer");
     }
-    if (!new Set(["half-even", "half-up", "toward-zero", "floor", "ceil"]).has(mode)) {
-      throw new TypeError("Unknown rounding mode");
-    }
+    checkRoundingMode(mode);
     const scale = 10n ** BigInt(Math.abs(places));
     if (places >= 0) {
       return new Rational(
-        roundedQuotient(this.#numerator * scale, this.#denominator, mode),
+        roundedQuotient(this.#numerator * scale, this.#denominator, mode, Rational.#roundingInfo),
         scale,
       );
     }
     return new Rational(
-      roundedQuotient(this.#numerator, this.#denominator * scale, mode) * scale,
+      roundedQuotient(this.#numerator, this.#denominator * scale, mode, Rational.#roundingInfo) * scale,
     );
-  }
-
-  /**
-   * The nearest integer as a Core Integer (round() returns a bigint). The
-   * default mode is half-even; school rounding is "half-up".
-   * @param {"half-even"|"half-up"|"toward-zero"|"floor"|"ceil"} [mode]
-   * @returns {Integer}
-   */
-  roundInteger(mode = "half-even") {
-    return new Rational.#Integer(this.round(mode));
-  }
-
-  /** floor() as a Core Integer. */
-  floorInteger() {
-    return new Rational.#Integer(this.floor());
-  }
-
-  /** ceil() as a Core Integer. */
-  ceilInteger() {
-    return new Rational.#Integer(this.ceil());
-  }
-
-  /** trunc() as a Core Integer. */
-  truncInteger() {
-    return new Rational.#Integer(this.trunc());
   }
 
   /**

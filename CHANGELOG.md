@@ -2,12 +2,49 @@
 
 ## Unreleased
 
+### Added (0.12.0)
+
+- More rounding conventions (`ROUNDING_MODES`): `half-down`, `half-odd`,
+  `half-ceil`, `half-floor` and `away-from-zero` join `half-up`,
+  `half-even`, `floor`, `ceil` and `toward-zero`. A mode may also be a
+  function given `{ value, floor, ceil, fraction }` that returns `floor` or
+  `ceil`. `rounding(mode)` makes a reusable rounder (`r(x)`, `r(x, places)`)
+  without any global setting.
+
+### Changed (breaking; release as 0.12.0)
+
+- `Rational#floor()`, `ceil()`, `trunc()` and `round(mode)` return a Core
+  `Integer` instead of a bigint. The bigint is `.value`, a JS number is
+  `.toNumber()`; `BigInt(x)`, `Number(x)` and `new Rational(x)` read an
+  Integer exactly. `Integer` gains the same four methods, returning itself.
+  Code doing bigint arithmetic on the result (`x.floor() - 1n`) or comparing
+  results with `===` must use `.value`. The Shelf libraries, calc-app and
+  RiX were checked and work with both forms.
+- The default rounding mode of `round()` and `roundTo()` (Rational and
+  Integer) is now `"half-up"`, school rounding with ties away from zero
+  (6.5 -> 7, -2.5 -> -3, 65 to the nearest ten -> 70). Banker's rounding is
+  still available as `"half-even"`.
+
 ### Added
 
-- `Rational#roundInteger(mode)`, `floorInteger()`, `ceilInteger()` and
-  `truncInteger()` return a Core `Integer` (the older `round`, `floor`,
-  `ceil` and `trunc` still return bigints). `Integer` has the same names,
-  returning itself.
+- Classroom clock times and dates in `@ratmath/core/units`, explicitly not a
+  date library (no time zones, daylight saving, leap seconds or historical
+  calendars; the docs point to Temporal, Luxon and date-fns). `clock("9:45
+  AM")` adds and subtracts durations around midnight (`daysLater` counts
+  midnights) and `until` gives elapsed time; `simpleDate("2026-11-28")` has
+  weekday and month names, day of year, `addDays` and `daysUntil`; plus
+  `isLeapYear`, `daysInMonth` and the `NOT_A_DATE_LIBRARY` notice.
+- `engines` lists `bun >=1.4.2` (Bun 1.4.0 caps BigInt at 2^20 bits).
+- Plain operands: every binary method (arithmetic, comparisons, `equals`,
+  interval/set `contains`/`overlaps`/`intersection`/`union`,
+  `possibleRelationsTo`, Integer `gcd`/`modulo`/floor division) on Integer,
+  Rational, Fraction, RationalInterval, FractionInterval, RationalIntervalSet
+  and CertifiedApproximation accepts a bigint or safe-integer number as the
+  exact Integer, as constructors and `R` already did. Other numbers (0.5,
+  2^60, NaN) throw one RangeError. Interval and set methods read a number,
+  Integer or Rational as the point [x, x]. Previously `Integer#compareTo(2)`
+  returned 0, Rational/Fraction comparisons threw a BigInt-mix TypeError and
+  interval `contains(2)` crashed.
 - Place value: `Integer#digits(base)`, and `digitAt(k, base)` and
   `placeValue(k, base)` on `Integer` and `Rational` (k = 0 ones, 1 tens,
   -1 tenths), exact for repeating expansions too.
@@ -16,7 +53,17 @@
 - `Quantity#toClock({ seconds, wrap, round })` writes a duration as `h:mm`
   or `h:mm:ss`, exactly; `wrap: 12` or `24` reads it as a time of day.
 
+### Fixed
+
+- `FractionInterval#mediantSplit` (and so `partitionWithMediants`) keeps the
+  mediant inside the interval when the endpoints' denominators have different
+  signs: `[1/-2, 1/3]` split at `2` before, now at `0/5`. Same-sign pairs are
+  unchanged.
+
 ### Docs
+
+- The integers page separates safe `number` inputs, engine BigInt capacity and
+  library budgets.
 
 - The rounding section says first that the default is round half to even
   and shows school rounding with `"half-up"`.

@@ -6,7 +6,25 @@
  */
 
 import { Rational } from "./rational.js";
-import { toExactBigInt } from "./bigint.js";
+import { plainIntegerOperand, toExactBigInt } from "./bigint.js";
+
+// A bigint or safe-integer number operand becomes a Rational.
+function liftPlain(other) {
+  const value = plainIntegerOperand(other);
+  return value === undefined ? other : new Rational(value);
+}
+
+// Set-style methods compare intervals; a number, Integer or Rational is the
+// one-point interval [x, x].
+function asInterval(other) {
+  other = liftPlain(other);
+  if (other?.isCertifiedApproximation === true) return other.enclosure;
+  if (typeof other?.value === "bigint" && other.denominator === undefined) {
+    other = new Rational(other.value);
+  }
+  if (other instanceof Rational) return new RationalInterval(other, other);
+  return other;
+}
 
 function hasTerminatingDecimal(value) {
   let denominator = value.denominator;
@@ -203,6 +221,7 @@ export class RationalInterval {
    * @returns {RationalInterval} The sum as a new RationalInterval
    */
   add(other) {
+    other = liftPlain(other);
     if (other?.isCertifiedApproximation === true) {
       return this.add(other.enclosure);
     }
@@ -241,6 +260,7 @@ export class RationalInterval {
    * @returns {RationalInterval} The difference as a new RationalInterval
    */
   subtract(other) {
+    other = liftPlain(other);
     if (other?.isCertifiedApproximation === true) {
       return this.subtract(other.enclosure);
     }
@@ -279,6 +299,7 @@ export class RationalInterval {
    * @returns {RationalInterval} The product as a new RationalInterval
    */
   multiply(other) {
+    other = liftPlain(other);
     if (other?.isCertifiedApproximation === true) {
       return this.multiply(other.enclosure);
     }
@@ -333,6 +354,7 @@ export class RationalInterval {
    * @throws {Error} If the divisor interval contains zero
    */
   divide(other) {
+    other = liftPlain(other);
     if (other?.isCertifiedApproximation === true) {
       return this.divide(other.enclosure);
     }
@@ -398,6 +420,7 @@ export class RationalInterval {
 
   /** Return a LESS/EQUAL/GREATER possibility mask against another enclosure. */
   possibleRelationsTo(other) {
+    other = liftPlain(other);
     if (other?.isCertifiedApproximation === true) other = other.enclosure;
     if (other?.value !== undefined && typeof other.value === "bigint") {
       other = new Rational(other.value, 1n);
@@ -580,6 +603,7 @@ export class RationalInterval {
    * @returns {boolean} True if the intervals overlap
    */
   overlaps(other) {
+    other = asInterval(other);
     return !(this.#high.lessThan(other.low) || other.high.lessThan(this.#low));
   }
 
@@ -590,6 +614,7 @@ export class RationalInterval {
    * @returns {boolean} True if this interval contains the other
    */
   contains(other) {
+    other = asInterval(other);
     return (
       this.#low.lessThanOrEqual(other.low) &&
       this.#high.greaterThanOrEqual(other.high)
@@ -626,6 +651,7 @@ export class RationalInterval {
    * @returns {boolean} True if the intervals are equal
    */
   equals(other) {
+    other = asInterval(other);
     return this.#low.equals(other.low) && this.#high.equals(other.high);
   }
 
@@ -636,6 +662,7 @@ export class RationalInterval {
    * @returns {RationalInterval|null} The intersection interval, or null if they don't overlap
    */
   intersection(other) {
+    other = asInterval(other);
     if (!this.overlaps(other)) {
       return null;
     }
@@ -653,6 +680,7 @@ export class RationalInterval {
    * @returns {RationalInterval|null} The union interval, or null if they are disjoint
    */
   union(other) {
+    other = asInterval(other);
     // Check if intervals are disjoint and not adjacent (touching)
     // Adjacent means they share an endpoint exactly
     const adjacentRight = this.#high.equals(other.low);
