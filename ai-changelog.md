@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Classroom clock times and dates
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+Adds src/time.js (re-exported from `@ratmath/core/units`): `clock`/`ClockTime`, `simpleDate`/`SimpleDate`, `isLeapYear`, `daysInMonth`, with a prominent not-a-date-library warning.
+
+James asked for small classroom-level helpers with a big warning pointing to real date libraries. Whole seconds only; dates are proleptic Gregorian, years 1 to 9999 (Hinnant's day-serial algorithm). Tests in tests/time.test.js walk a full 400-year cycle. Docs section on the units page.
+
 ## Declare Bun 1.4.2 in engines
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-28

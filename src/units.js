@@ -1060,3 +1060,10 @@ export function isUnit(value) {
 export function isQuantity(value) {
   return value instanceof Quantity;
 }
+
+// Classroom clock times and dates (not a date library; see src/time.js).
+import { _registerQuantityFactory } from "./time.js";
+_registerQuantityFactory(Q);
+export {
+  ClockTime, clock, SimpleDate, simpleDate, isLeapYear, daysInMonth, NOT_A_DATE_LIBRARY,
+} from "./time.js";

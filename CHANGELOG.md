@@ -4,6 +4,14 @@
 
 ### Added
 
+- Classroom clock times and dates in `@ratmath/core/units`, explicitly not a
+  date library (no time zones, daylight saving, leap seconds or historical
+  calendars; the docs point to Temporal, Luxon and date-fns). `clock("9:45
+  AM")` adds and subtracts durations around midnight (`daysLater` counts
+  midnights) and `until` gives elapsed time; `simpleDate("2026-11-28")` has
+  weekday and month names, day of year, `addDays` and `daysUntil`; plus
+  `isLeapYear`, `daysInMonth` and the `NOT_A_DATE_LIBRARY` notice.
+- `engines` lists `bun >=1.4.2` (Bun 1.4.0 caps BigInt at 2^20 bits).
 - Plain operands: every binary method (arithmetic, comparisons, `equals`,
   interval/set `contains`/`overlaps`/`intersection`/`union`,
   `possibleRelationsTo`, Integer `gcd`/`modulo`/floor division) on Integer,
