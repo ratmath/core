@@ -10,6 +10,7 @@
 
 import { Rational } from "./rational.js";
 import { RationalInterval } from "./rational-interval.js";
+import { plainIntegerOperand } from "./bigint.js";
 
 function asRational(value, name) {
   if (value === null) return null;
@@ -202,6 +203,11 @@ function intersectionComponent(left, right) {
 
 function asIntervalSet(value) {
   if (value instanceof RationalIntervalSet) return value;
+  // A number, bigint, Integer or Rational is the one-point set {x}.
+  const plain = plainIntegerOperand(value);
+  if (plain !== undefined) value = new Rational(plain);
+  if (typeof value?.value === "bigint" && value.denominator === undefined) value = new Rational(value.value);
+  if (value instanceof Rational) value = new RationalInterval(value, value);
   return new RationalIntervalSet(value);
 }
 

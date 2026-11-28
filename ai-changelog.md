@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## One contract for plain number operands
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+Every Core binary method now treats a bigint or safe-integer number like the Integer of that value and refuses other numbers with one RangeError.
+
+The shared helper is `plainIntegerOperand` in src/bigint.js; each class lifts it to its own type (Fraction n/1, a point interval for interval/set methods). `tests/plain-operands.test.js` checks every method with `2`, `2n` and `new Integer(2)`, and that 0.5, 2^60, NaN and Infinity throw. Types gain `PlainInteger`.
+
 ## mediantSplit with mixed-sign denominators
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-28

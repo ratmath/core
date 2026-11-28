@@ -217,6 +217,11 @@ export class FractionInterval {
    * @returns {boolean} True if the intervals are equal
    */
   equals(other) {
+    // A number, bigint, Integer or Fraction is the one-point interval [x, x].
+    if (other?.low === undefined) {
+      const point = new Fraction(1n, 1n).multiply(other);
+      return this.#low.equals(point) && this.#high.equals(point);
+    }
     return this.#low.equals(other.low) && this.#high.equals(other.high);
   }
 

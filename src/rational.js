@@ -8,7 +8,7 @@
 
 import { BaseSystem } from "./base-system.js";
 import { negateContinuedFraction, parseRationalParts } from "./rational-literal.js";
-import { toExactBigInt } from "./bigint.js";
+import { plainIntegerOperand, toExactBigInt } from "./bigint.js";
 import { reducedProduct, reducedQuotient, reducedSum } from "./reduced-arithmetic.js";
 
 const POWERS_OF_5 = Object.freeze({
@@ -97,6 +97,8 @@ function positiveDenominatorBound(value) {
 
 // Rational comparisons also accept Integer operands (denominator 1).
 function exactParts(other) {
+  const plain = plainIntegerOperand(other);
+  if (plain !== undefined) return [plain, 1n];
   if (typeof other?.value === "bigint" && other.denominator === undefined) {
     return [other.value, 1n];
   }
@@ -230,6 +232,8 @@ export class Rational {
    * @private
    */
   static #canonicalParts(other) {
+    const plain = plainIntegerOperand(other);
+    if (plain !== undefined) return [plain, 1n];
     if (other == null || typeof other !== "object") return null;
     const prototype = Object.getPrototypeOf(other);
     if (prototype === Rational.prototype) {
@@ -490,6 +494,7 @@ export class Rational {
 
   /** Return a LESS/EQUAL/GREATER possibility mask against an enclosed value. */
   possibleRelationsTo(other) {
+    if (plainIntegerOperand(other) !== undefined) other = new Rational(other);
     if (other?.isCertifiedApproximation === true) other = other.enclosure;
     if (other?.constructor?.name === "Integer") other = new Rational(other.value, 1n);
     if (other instanceof Rational) return this.lessThan(other) ? 1 : this.greaterThan(other) ? 4 : 2;

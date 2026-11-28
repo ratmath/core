@@ -4,6 +4,16 @@
 
 ### Added
 
+- Plain operands: every binary method (arithmetic, comparisons, `equals`,
+  interval/set `contains`/`overlaps`/`intersection`/`union`,
+  `possibleRelationsTo`, Integer `gcd`/`modulo`/floor division) on Integer,
+  Rational, Fraction, RationalInterval, FractionInterval, RationalIntervalSet
+  and CertifiedApproximation accepts a bigint or safe-integer number as the
+  exact Integer, as constructors and `R` already did. Other numbers (0.5,
+  2^60, NaN) throw one RangeError. Interval and set methods read a number,
+  Integer or Rational as the point [x, x]. Previously `Integer#compareTo(2)`
+  returned 0, Rational/Fraction comparisons threw a BigInt-mix TypeError and
+  interval `contains(2)` crashed.
 - `Rational#roundInteger(mode)`, `floorInteger()`, `ceilInteger()` and
   `truncInteger()` return a Core `Integer` (the older `round`, `floor`,
   `ceil` and `trunc` still return bigints). `Integer` has the same names,

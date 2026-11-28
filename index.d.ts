@@ -2,6 +2,8 @@ export type IntegerInput = number | string | bigint | Integer;
 export type RationalInput = IntegerInput | Rational;
 export type CoreScalar = Integer | Rational;
 export type CoreNumber = CoreScalar | RationalInterval | CertifiedApproximation;
+/** A bigint or a safe-integer number; binary methods treat it as the exact Integer. Other numbers throw a RangeError. */
+export type PlainInteger = bigint | number;
 export type RelationMask = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type ApproximationReason =
   | "literal"
@@ -104,15 +106,15 @@ export class CertifiedApproximation {
   readonly isCertifiedApproximation: true;
   sameSource(other: unknown): boolean;
   copy(): CertifiedApproximation;
-  add(other: CoreNumber): CoreNumber;
-  subtract(other: CoreNumber): CoreNumber;
-  multiply(other: CoreNumber): CoreNumber;
-  divide(other: CoreNumber): CoreNumber;
+  add(other: CoreNumber | PlainInteger): CoreNumber;
+  subtract(other: CoreNumber | PlainInteger): CoreNumber;
+  multiply(other: CoreNumber | PlainInteger): CoreNumber;
+  divide(other: CoreNumber | PlainInteger): CoreNumber;
   negate(): CoreNumber;
   reciprocal(): CoreNumber;
   pow(exponent: number | bigint): CoreNumber;
   E(exponent: number | bigint): CoreNumber;
-  possibleRelationsTo(other: CoreNumber): RelationMask;
+  possibleRelationsTo(other: CoreNumber | PlainInteger): RelationMask;
   toRationalInterval(): RationalInterval;
   toRational(): Rational;
   toString(): string;
@@ -185,22 +187,22 @@ export class Integer {
   constructor(value: IntegerInput);
   readonly value: bigint;
 
-  add(other: CoreNumber): CoreNumber;
-  subtract(other: CoreNumber): CoreNumber;
-  multiply(other: CoreNumber): CoreNumber;
-  divide(other: CoreNumber): CoreNumber;
-  modulo(other: Integer): Integer;
-  floorDivide(other: Integer): Integer;
-  floorModulo(other: Integer): Integer;
-  divmod(other: Integer): [Integer, Integer];
+  add(other: CoreNumber | PlainInteger): CoreNumber;
+  subtract(other: CoreNumber | PlainInteger): CoreNumber;
+  multiply(other: CoreNumber | PlainInteger): CoreNumber;
+  divide(other: CoreNumber | PlainInteger): CoreNumber;
+  modulo(other: Integer | PlainInteger): Integer;
+  floorDivide(other: Integer | PlainInteger): Integer;
+  floorModulo(other: Integer | PlainInteger): Integer;
+  divmod(other: Integer | PlainInteger): [Integer, Integer];
   negate(): Integer;
   pow(exponent: number | bigint | Integer): Integer | Rational;
-  equals(other: Integer): boolean;
-  compareTo(other: Integer): -1 | 0 | 1;
-  lessThan(other: Integer): boolean;
-  lessThanOrEqual(other: Integer): boolean;
-  greaterThan(other: Integer): boolean;
-  greaterThanOrEqual(other: Integer): boolean;
+  equals(other: Integer | PlainInteger): boolean;
+  compareTo(other: Integer | PlainInteger): -1 | 0 | 1;
+  lessThan(other: Integer | PlainInteger): boolean;
+  lessThanOrEqual(other: Integer | PlainInteger): boolean;
+  greaterThan(other: Integer | PlainInteger): boolean;
+  greaterThanOrEqual(other: Integer | PlainInteger): boolean;
   abs(): Integer;
   sign(): Integer;
   isEven(): boolean;
@@ -208,14 +210,14 @@ export class Integer {
   isZero(): boolean;
   isPositive(): boolean;
   isNegative(): boolean;
-  gcd(other: Integer): Integer;
-  lcm(other: Integer): Integer;
+  gcd(other: Integer | PlainInteger): Integer;
+  lcm(other: Integer | PlainInteger): Integer;
   toString(base?: number | BaseSystem): string;
   toBase(baseSystem: BaseSystem): string;
   toNumber(): number;
   toRational(): Rational;
   E(exponent: number | bigint): Integer | Rational;
-  possibleRelationsTo(other: CoreNumber): RelationMask;
+  possibleRelationsTo(other: CoreNumber | PlainInteger): RelationMask;
   factorial(): Integer;
   doubleFactorial(): Integer;
   /** This integer (matches Rational#roundInteger and friends). */
@@ -256,22 +258,22 @@ export class Rational {
   readonly denominator: bigint;
 
   add(other: CertifiedApproximation): CertifiedApproximation;
-  add(other: CoreNumber): Rational | RationalInterval;
+  add(other: CoreNumber | PlainInteger): Rational | RationalInterval;
   subtract(other: CertifiedApproximation): CertifiedApproximation;
-  subtract(other: CoreNumber): Rational | RationalInterval;
+  subtract(other: CoreNumber | PlainInteger): Rational | RationalInterval;
   multiply(other: CertifiedApproximation): CertifiedApproximation;
-  multiply(other: CoreNumber): Rational | RationalInterval;
+  multiply(other: CoreNumber | PlainInteger): Rational | RationalInterval;
   divide(other: CertifiedApproximation): CertifiedApproximation;
-  divide(other: CoreNumber): Rational | RationalInterval;
+  divide(other: CoreNumber | PlainInteger): Rational | RationalInterval;
   negate(): Rational;
   reciprocal(): Rational;
   pow(exponent: number | bigint): Rational;
-  equals(other: Rational | Integer): boolean;
-  compareTo(other: Rational | Integer): -1 | 0 | 1;
-  lessThan(other: Rational | Integer): boolean;
-  lessThanOrEqual(other: Rational | Integer): boolean;
-  greaterThan(other: Rational | Integer): boolean;
-  greaterThanOrEqual(other: Rational | Integer): boolean;
+  equals(other: Rational | Integer | PlainInteger): boolean;
+  compareTo(other: Rational | Integer | PlainInteger): -1 | 0 | 1;
+  lessThan(other: Rational | Integer | PlainInteger): boolean;
+  lessThanOrEqual(other: Rational | Integer | PlainInteger): boolean;
+  greaterThan(other: Rational | Integer | PlainInteger): boolean;
+  greaterThanOrEqual(other: Rational | Integer | PlainInteger): boolean;
   abs(): Rational;
   floor(): bigint;
   ceil(): bigint;
@@ -321,7 +323,7 @@ export class Rational {
   ): string;
   toDecimal(maxDigits?: number): string;
   E(exponent: number | bigint): Rational;
-  possibleRelationsTo(other: CoreNumber): RelationMask;
+  possibleRelationsTo(other: CoreNumber | PlainInteger): RelationMask;
   toScientificNotation(
     useRepeatNotation?: boolean,
     precision?: number,
@@ -367,21 +369,21 @@ export class RationalInterval {
   readonly low: Rational;
   readonly high: Rational;
 
-  add(other: CoreNumber): RationalInterval;
-  subtract(other: CoreNumber): RationalInterval;
-  multiply(other: CoreNumber): RationalInterval;
-  divide(other: CoreNumber): RationalInterval;
+  add(other: CoreNumber | PlainInteger): RationalInterval;
+  subtract(other: CoreNumber | PlainInteger): RationalInterval;
+  multiply(other: CoreNumber | PlainInteger): RationalInterval;
+  divide(other: CoreNumber | PlainInteger): RationalInterval;
   reciprocate(): RationalInterval;
   negate(): RationalInterval;
   pow(exponent: number | bigint): RationalInterval;
   mpow(exponent: number | bigint | string): RationalInterval;
-  overlaps(other: RationalInterval): boolean;
-  contains(other: RationalInterval): boolean;
+  overlaps(other: RationalInterval | Rational | Integer | PlainInteger): boolean;
+  contains(other: RationalInterval | Rational | Integer | PlainInteger): boolean;
   containsValue(value: RationalInput): boolean;
   containsZero(): boolean;
-  equals(other: RationalInterval): boolean;
-  intersection(other: RationalInterval): RationalInterval | null;
-  union(other: RationalInterval): RationalInterval | null;
+  equals(other: RationalInterval | Rational | Integer | PlainInteger): boolean;
+  intersection(other: RationalInterval | Rational | Integer | PlainInteger): RationalInterval | null;
+  union(other: RationalInterval | Rational | Integer | PlainInteger): RationalInterval | null;
   toString(): string;
   toMixedString(): string;
   toRepeatingDecimal(options?: boolean | {
@@ -405,7 +407,7 @@ export class RationalInterval {
     random?: () => number,
   ): Rational | null;
   E(exponent: number | bigint): RationalInterval;
-  possibleRelationsTo(other: CoreNumber): RelationMask;
+  possibleRelationsTo(other: CoreNumber | PlainInteger): RelationMask;
   bitLength(): number;
   toJSON(): {
     $ratmath: "RationalInterval";
@@ -570,10 +572,10 @@ export class RationalIntervalSet {
   readonly componentCount: number;
 
   containsValue(value: RationalInput): boolean;
-  contains(other: RationalIntervalSetInput): boolean;
-  equals(other: RationalIntervalSetInput): boolean;
-  union(other: RationalIntervalSetInput): RationalIntervalSet;
-  intersection(other: RationalIntervalSetInput): RationalIntervalSet;
+  contains(other: RationalIntervalSetInput | Rational | Integer | PlainInteger): boolean;
+  equals(other: RationalIntervalSetInput | Rational | Integer | PlainInteger): boolean;
+  union(other: RationalIntervalSetInput | Rational | Integer | PlainInteger): RationalIntervalSet;
+  intersection(other: RationalIntervalSetInput | Rational | Integer | PlainInteger): RationalIntervalSet;
   hull(): RationalIntervalSet;
   toRationalInterval(): RationalInterval | null;
   toString(): string;
@@ -671,21 +673,21 @@ export class Fraction {
   readonly denominator: bigint;
   readonly isInfinite: boolean;
 
-  add(other: Fraction): Fraction;
-  subtract(other: Fraction): Fraction;
-  multiply(other: Fraction): Fraction;
-  divide(other: Fraction): Fraction;
+  add(other: Fraction | Integer | PlainInteger): Fraction;
+  subtract(other: Fraction | Integer | PlainInteger): Fraction;
+  multiply(other: Fraction | Integer | PlainInteger): Fraction;
+  divide(other: Fraction | Integer | PlainInteger): Fraction;
   pow(exponent: number | bigint): Fraction;
   scale(factor: number | bigint): Fraction;
   reduce(): Fraction;
-  mediant(other: Fraction): Fraction;
+  mediant(other: Fraction | Integer | PlainInteger): Fraction;
   toRational(): Rational;
   toString(): string;
-  equals(other: Fraction): boolean;
-  lessThan(other: Fraction): boolean;
-  lessThanOrEqual(other: Fraction): boolean;
-  greaterThan(other: Fraction): boolean;
-  greaterThanOrEqual(other: Fraction): boolean;
+  equals(other: Fraction | Integer | PlainInteger): boolean;
+  lessThan(other: Fraction | Integer | PlainInteger): boolean;
+  lessThanOrEqual(other: Fraction | Integer | PlainInteger): boolean;
+  greaterThan(other: Fraction | Integer | PlainInteger): boolean;
+  greaterThanOrEqual(other: Fraction | Integer | PlainInteger): boolean;
   E(exponent: number | bigint): Fraction;
   toJSON(): {
     $ratmath: "Fraction";
@@ -730,7 +732,7 @@ export class FractionInterval {
   ): FractionInterval[];
   toRationalInterval(): RationalInterval;
   toString(): string;
-  equals(other: FractionInterval): boolean;
+  equals(other: FractionInterval | Fraction | Integer | PlainInteger): boolean;
   E(exponent: number | bigint): FractionInterval;
   toJSON(): {
     $ratmath: "FractionInterval";
