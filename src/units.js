@@ -610,13 +610,13 @@ export class Quantity {
     let r = total instanceof Integer ? new Rational(total.value) : total;
     const step = seconds ? 1n : 60n;
     if (round) {
-      r = new Rational(r.divide(new Rational(step)).round(round) * step);
+      r = new Rational(r.divide(new Rational(step)).round(round).value * step);
     } else if (!seconds && (r.numerator % (60n * r.denominator)) !== 0n) {
       throw new RangeError("Duration is not a whole number of minutes (pass round, or seconds: true)");
     }
     const negative = r.numerator < 0n;
     if (negative) r = r.negate();
-    const whole = r.floor();
+    const whole = r.floor().value;
     let frac = r.subtract(new Rational(whole));
     let h = whole / 3600n;
     const m = (whole / 60n) % 60n;

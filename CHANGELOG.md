@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Changed (breaking; release as 0.12.0)
+
+- `Rational#floor()`, `ceil()`, `trunc()` and `round(mode)` return a Core
+  `Integer` instead of a bigint. The bigint is `.value`, a JS number is
+  `.toNumber()`; `BigInt(x)`, `Number(x)` and `new Rational(x)` read an
+  Integer exactly. `Integer` gains the same four methods, returning itself.
+  Code doing bigint arithmetic on the result (`x.floor() - 1n`) or comparing
+  results with `===` must use `.value`. The Shelf libraries, calc-app and
+  RiX were checked and work with both forms.
+- The default rounding mode of `round()` and `roundTo()` (Rational and
+  Integer) is now `"half-up"`, school rounding with ties away from zero
+  (6.5 -> 7, -2.5 -> -3, 65 to the nearest ten -> 70). Banker's rounding is
+  still available as `"half-even"`.
+
 ### Added
 
 - Classroom clock times and dates in `@ratmath/core/units`, explicitly not a
@@ -22,10 +36,6 @@
   Integer or Rational as the point [x, x]. Previously `Integer#compareTo(2)`
   returned 0, Rational/Fraction comparisons threw a BigInt-mix TypeError and
   interval `contains(2)` crashed.
-- `Rational#roundInteger(mode)`, `floorInteger()`, `ceilInteger()` and
-  `truncInteger()` return a Core `Integer` (the older `round`, `floor`,
-  `ceil` and `trunc` still return bigints). `Integer` has the same names,
-  returning itself.
 - Place value: `Integer#digits(base)`, and `digitAt(k, base)` and
   `placeValue(k, base)` on `Integer` and `Rational` (k = 0 ones, 1 tens,
   -1 tenths), exact for repeating expansions too.

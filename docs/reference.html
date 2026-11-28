@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/site.css?v=dfabc59731">
+<link rel="stylesheet" href="assets/site.css?v=ccb6501b3e">
 </head>
 <body>
 <div class="shell">
@@ -100,8 +100,7 @@
   <tr><th>method</th><th>result</th></tr>
   <tr><td>add, subtract, multiply, divide</td><td>exact; an interval operand gives a RationalInterval</td></tr>
   <tr><td>negate, reciprocal, abs, pow(n), E(k)</td><td>exact</td></tr>
-  <tr><td>floor(), ceil(), trunc(), round(mode?), roundTo(places, mode?)</td><td>bigints (roundTo gives a Rational); modes <code>half-even</code> (default), <code>half-up</code> (school rounding), <code>toward-zero</code>, <code>floor</code>, <code>ceil</code></td></tr>
-  <tr><td>roundInteger(mode?), floorInteger(), ceilInteger(), truncInteger()</td><td>the same, as a Core Integer</td></tr>
+  <tr><td>floor(), ceil(), trunc(), round(mode?), roundTo(places, mode?)</td><td>Integers (bigint via <code>.value</code>; roundTo gives a Rational); modes <code>half-up</code> (default, school rounding), <code>half-even</code> (banker's rounding), <code>toward-zero</code>, <code>floor</code>, <code>ceil</code></td></tr>
   <tr><td>digitAt(k, base?), placeValue(k, base?)</td><td>the digit in place k (0 ones, 1 tens, −1 tenths) and its value</td></tr>
   <tr><td>toString(), toMixedString(), toDecimal(digits?), toNumber()</td><td><code>"-9/4"</code>, <code>"-2..1/4"</code>, display decimal, a float</td></tr>
   <tr><td>toRepeatingDecimal(limit?, onLimit?), toRepeatingDecimalWithPeriod(opts?)</td><td><code>"0.1#6"</code>; period limit 30 by default</td></tr>
@@ -237,6 +236,6 @@ JSON.parse(saved, reviveCoreValue)</textarea>
 </section>
 </main>
 </div>
-<script type="module" src="assets/pages.js?v=dfabc59731"></script>
+<script type="module" src="assets/pages.js?v=ccb6501b3e"></script>
 </body>
 </html>

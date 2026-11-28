@@ -462,23 +462,26 @@ export class Integer {
    * @param {number|BaseSystem} [base] - The base to convert to (default: 10)
    * @returns {string} String representation of this integer
    */
-  /** This integer (it is already one); matches Rational#roundInteger. */
-  roundInteger() {
+  /** This integer: rounding an Integer leaves it unchanged (matches Rational#round). */
+  round(mode = "half-up") {
+    if (!new Set(["half-even", "half-up", "toward-zero", "floor", "ceil"]).has(mode)) {
+      throw new TypeError("Unknown rounding mode");
+    }
     return this;
   }
 
-  /** This integer; matches Rational#floorInteger. */
-  floorInteger() {
+  /** This integer (matches Rational#floor). */
+  floor() {
     return this;
   }
 
-  /** This integer; matches Rational#ceilInteger. */
-  ceilInteger() {
+  /** This integer (matches Rational#ceil). */
+  ceil() {
     return this;
   }
 
-  /** This integer; matches Rational#truncInteger. */
-  truncInteger() {
+  /** This integer (matches Rational#trunc). */
+  trunc() {
     return this;
   }
 

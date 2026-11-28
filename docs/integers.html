@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/site.css?v=dfabc59731">
+<link rel="stylesheet" href="assets/site.css?v=ccb6501b3e">
 </head>
 <body>
 <div class="shell">
@@ -99,7 +99,7 @@ new Integer(7).doubleFactorial();            // 105 = 7·5·3·1
 new Integer(255).bitLength();                // 8</code></pre>
 
 <h2>Digits and place value</h2>
-<p><code>digits(base = 10)</code> lists the digits of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∣</mi><mi>n</mi><mi mathvariant="normal">∣</mi></mrow><annotation encoding="application/x-tex">|n|</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∣</span><span class="mord mathnormal">n</span><span class="mord">∣</span></span></span></span>, most significant first. <code>digitAt(k)</code> is the digit in place <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span></span></span></span> (0 is the ones place) and <code>placeValue(k)</code> is its value with the sign of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span>: the 8 in 486 is worth 80. <code>roundInteger</code>, <code>floorInteger</code>, <code>ceilInteger</code> and <code>truncInteger</code> return the integer itself, so code can call them on any Rational or Integer.</p>
+<p><code>digits(base = 10)</code> lists the digits of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∣</mi><mi>n</mi><mi mathvariant="normal">∣</mi></mrow><annotation encoding="application/x-tex">|n|</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∣</span><span class="mord mathnormal">n</span><span class="mord">∣</span></span></span></span>, most significant first. <code>digitAt(k)</code> is the digit in place <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span></span></span></span> (0 is the ones place) and <code>placeValue(k)</code> is its value with the sign of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span>: the 8 in 486 is worth 80. <code>round</code>, <code>floor</code>, <code>ceil</code> and <code>trunc</code> return the integer itself, so code can call them on any Rational or Integer.</p>
 <pre><code>new Integer(486).digits();        // [4, 8, 6]
 new Integer(486).placeValue(1);   // 80
 new Integer(10).digits(2);        // [1, 0, 1, 0]</code></pre>
@@ -126,6 +126,6 @@ new Integer(30).factorial()</textarea>
 </section>
 </main>
 </div>
-<script type="module" src="assets/pages.js?v=dfabc59731"></script>
+<script type="module" src="assets/pages.js?v=ccb6501b3e"></script>
 </body>
 </html>

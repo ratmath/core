@@ -4,39 +4,67 @@ import { Q, units, BASE_DIMENSIONS } from "../src/units.js";
 
 const q = (n, d = 1n) => new Rational(BigInt(n), BigInt(d));
 
-describe("exact rounding to Core Integers", () => {
-  test("roundInteger matches round() for every mode, as an Integer", () => {
+describe("rounding returns Core Integers", () => {
+  // The bigint answer for each mode, worked out independently with BigInt division.
+  const floorDiv = (n, d) => (n % d !== 0n && (n < 0n) !== (d < 0n) ? n / d - 1n : n / d);
+  const expected = (n, d, mode) => {
+    const f = floorDiv(n, d);
+    const twice = 2n * (n - f * d); // 2 * fractional part * d, in [0, 2d)
+    if (mode === "floor") return twice === 0n ? f : f;
+    if (mode === "ceil") return twice === 0n ? f : f + 1n;
+    if (mode === "toward-zero") return twice === 0n || n >= 0n ? f : f + 1n;
+    if (twice < d) return f;
+    if (twice > d) return f + 1n;
+    return mode === "half-up" ? (n >= 0n ? f + 1n : f) : (f % 2n === 0n ? f : f + 1n);
+  };
+
+  test("floor, ceil, trunc and round give Integers with the right value in every mode", () => {
     const modes = ["half-even", "half-up", "toward-zero", "floor", "ceil"];
-    for (let n = -25; n <= 25; n++) {
-      for (const d of [1, 2, 3, 4, 10]) {
+    for (let n = -25n; n <= 25n; n++) {
+      for (const d of [1n, 2n, 3n, 4n, 10n]) {
         const x = q(n, d);
         for (const m of modes) {
-          const r = x.roundInteger(m);
+          const r = x.round(m);
           expect(r).toBeInstanceOf(Integer);
-          expect(r.value).toBe(x.round(m));
+          expect(r.value).toBe(expected(n, d, m));
         }
-        expect(x.floorInteger().value).toBe(x.floor());
-        expect(x.ceilInteger().value).toBe(x.ceil());
-        expect(x.truncInteger().value).toBe(x.trunc());
+        expect(x.floor().value).toBe(expected(n, d, "floor"));
+        expect(x.ceil().value).toBe(expected(n, d, "ceil"));
+        expect(x.trunc().value).toBe(expected(n, d, "toward-zero"));
       }
     }
   });
 
-  test("school rounding is half-up; the default is half-even", () => {
-    expect(q(65, 10).roundInteger().toString()).toBe("6");
-    expect(q(65, 10).roundInteger("half-up").toString()).toBe("7");
-    expect(q(-5, 2).roundInteger("half-up").toString()).toBe("-3");
+  test("the default is school rounding (half-up); half-even is opt-in", () => {
+    expect(q(65, 10).round().toString()).toBe("7");
+    expect(q(65, 10).round("half-even").toString()).toBe("6");
+    expect(q(-5, 2).round().toString()).toBe("-3");
+    expect(new Rational(65).roundTo(-1).toString()).toBe("70");
+    expect(new Rational(65).roundTo(-1, "half-even").toString()).toBe("60");
+    expect(new Integer(4).round()).toBeInstanceOf(Integer);
+    expect(q(65, 10).round("half-up").toString()).toBe("7");
+    expect(q(-5, 2).round("half-up").toString()).toBe("-3");
     // Integer results chain into Core arithmetic.
-    expect(q(65, 10).roundInteger("half-up").multiply(new Integer(10n)).toString()).toBe("70");
-    expect(() => q(1, 2).roundInteger("nearest")).toThrow();
+    expect(q(65, 10).round("half-up").multiply(new Integer(10n)).toString()).toBe("70");
+    expect(() => q(1, 2).round("nearest")).toThrow();
   });
 
-  test("Integer has the same names", () => {
+  test("the bigint is .value and a JS number is toNumber(), exact past 2^53", () => {
+    const big = q(10n ** 30n + 1n, 2n);
+    expect(big.floor().value).toBe(5n * 10n ** 29n);
+    expect(BigInt(big.floor())).toBe(5n * 10n ** 29n);
+    expect(new Rational(big.floor()).equals(big.floor())).toBe(true);
+    expect(q(7, 2).floor().toNumber()).toBe(3);
+  });
+
+  test("Integer has the same methods and returns itself", () => {
     const n = new Integer(-7n);
-    expect(n.roundInteger()).toBe(n);
-    expect(n.floorInteger()).toBe(n);
-    expect(n.ceilInteger()).toBe(n);
-    expect(n.truncInteger()).toBe(n);
+    expect(n.round()).toBe(n);
+    expect(n.round("half-up")).toBe(n);
+    expect(n.floor()).toBe(n);
+    expect(n.ceil()).toBe(n);
+    expect(n.trunc()).toBe(n);
+    expect(() => n.round("nearest")).toThrow();
   });
 });
 

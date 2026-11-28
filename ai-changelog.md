@@ -2,6 +2,16 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Rounding returns Core Integers
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+`Rational#floor/ceil/trunc/round` return an Integer (Integer has the same methods, returning itself); the unreleased `roundInteger` family is removed.
+
+James chose this after a survey of every dependent: of 44 call sites only 9 (symbolic, stats, calc-app) used the bigint directly, and those were changed to `BigInt(x.floor())`, which works on both forms. units.js toClock uses `.value`. Needs a 0.12.0 release and a Shelf peer-range bump.
+
+James then asked to flip the default rounding mode to `"half-up"` (school rounding) for `round` and `roundTo`, since RatMath is mainly educational; `"half-even"` stays as an option. RiX's Round inherits the new default; its docs (documentation/eval/objects/rational.md) say half-even and should change when RiX moves to Core 0.12.0.
+
 ## Classroom clock times and dates
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-28

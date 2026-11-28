@@ -220,11 +220,11 @@ export class Integer {
   possibleRelationsTo(other: CoreNumber | PlainInteger): RelationMask;
   factorial(): Integer;
   doubleFactorial(): Integer;
-  /** This integer (matches Rational#roundInteger and friends). */
-  roundInteger(mode?: RoundingMode): Integer;
-  floorInteger(): Integer;
-  ceilInteger(): Integer;
-  truncInteger(): Integer;
+  /** This integer (matches Rational#round and friends). */
+  round(mode?: RoundingMode): Integer;
+  floor(): Integer;
+  ceil(): Integer;
+  trunc(): Integer;
   /** Digits of |this|, most significant first: 486 gives [4, 8, 6]. */
   digits(base?: number): number[];
   /** The digit in place k (0 = ones, 1 = tens) of |this|. */
@@ -275,19 +275,13 @@ export class Rational {
   greaterThan(other: Rational | Integer | PlainInteger): boolean;
   greaterThanOrEqual(other: Rational | Integer | PlainInteger): boolean;
   abs(): Rational;
-  floor(): bigint;
-  ceil(): bigint;
-  trunc(): bigint;
-  round(mode?: RoundingMode): bigint;
+  /** The bigint is `.value`; a JS number is `.toNumber()`. */
+  floor(): Integer;
+  ceil(): Integer;
+  trunc(): Integer;
+  /** Default "half-up" (school rounding, ties away from zero); "half-even" is banker's rounding. */
+  round(mode?: RoundingMode): Integer;
   roundTo(places: number, mode?: RoundingMode): Rational;
-  /** The nearest integer as a Core Integer (round() returns a bigint); default half-even. */
-  roundInteger(mode?: RoundingMode): Integer;
-  /** floor() as a Core Integer. */
-  floorInteger(): Integer;
-  /** ceil() as a Core Integer. */
-  ceilInteger(): Integer;
-  /** trunc() as a Core Integer. */
-  truncInteger(): Integer;
   /** The digit in place k of |this|: k = 0 ones, 1 tens, -1 tenths. */
   digitAt(k: number, base?: number): number;
   /** The value of the digit in place k, with this number's sign: placeValue(-2) of 3.47 is 7/100. */

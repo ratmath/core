@@ -20,7 +20,7 @@ describe("Integer floor division, floor modulo and divmod", () => {
   it("matches Rational floor division on large values", () => {
     const a = -(10n ** 40n) - 7n;
     const b = 10n ** 17n + 3n;
-    expect(I(a).floorDivide(I(b)).value).toBe(new Rational(a, b).floor());
+    expect(I(a).floorDivide(I(b)).value).toBe(new Rational(a, b).floor().value);
   });
 
   it("leaves existing divide and modulo meanings unchanged", () => {

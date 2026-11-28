@@ -39,7 +39,7 @@ new Integer(7).doubleFactorial();            // 105 = 7·5·3·1
 new Integer(255).bitLength();                // 8</code></pre>
 
 <h2>Digits and place value</h2>
-<p><code>digits(base = 10)</code> lists the digits of \(|n|\), most significant first. <code>digitAt(k)</code> is the digit in place \(k\) (0 is the ones place) and <code>placeValue(k)</code> is its value with the sign of \(n\): the 8 in 486 is worth 80. <code>roundInteger</code>, <code>floorInteger</code>, <code>ceilInteger</code> and <code>truncInteger</code> return the integer itself, so code can call them on any Rational or Integer.</p>
+<p><code>digits(base = 10)</code> lists the digits of \(|n|\), most significant first. <code>digitAt(k)</code> is the digit in place \(k\) (0 is the ones place) and <code>placeValue(k)</code> is its value with the sign of \(n\): the 8 in 486 is worth 80. <code>round</code>, <code>floor</code>, <code>ceil</code> and <code>trunc</code> return the integer itself, so code can call them on any Rational or Integer.</p>
 <pre><code>new Integer(486).digits();        // [4, 8, 6]
 new Integer(486).placeValue(1);   // 80
 new Integer(10).digits(2);        // [1, 0, 1, 0]</code></pre>

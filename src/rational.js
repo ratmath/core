@@ -633,26 +633,35 @@ export class Rational {
       : new Rational(this.#numerator, this.#denominator);
   }
 
+  /** The greatest Integer <= this. The bigint is `.value`; a JS number is `.toNumber()`. */
   floor() {
-    return roundedQuotient(this.#numerator, this.#denominator, "floor");
+    return new Rational.#Integer(roundedQuotient(this.#numerator, this.#denominator, "floor"));
   }
 
+  /** The least Integer >= this. */
   ceil() {
-    return roundedQuotient(this.#numerator, this.#denominator, "ceil");
+    return new Rational.#Integer(roundedQuotient(this.#numerator, this.#denominator, "ceil"));
   }
 
+  /** The Integer part, rounding toward zero. */
   trunc() {
-    return roundedQuotient(this.#numerator, this.#denominator, "toward-zero");
+    return new Rational.#Integer(roundedQuotient(this.#numerator, this.#denominator, "toward-zero"));
   }
 
-  round(mode = "half-even") {
+  /**
+   * The nearest Integer. The default is school rounding, "half-up" (ties
+   * away from zero: 5/2 -> 3, -5/2 -> -3); "half-even" is banker's rounding.
+   * @param {"half-even"|"half-up"|"toward-zero"|"floor"|"ceil"} [mode]
+   * @returns {Integer}
+   */
+  round(mode = "half-up") {
     if (!new Set(["half-even", "half-up", "toward-zero", "floor", "ceil"]).has(mode)) {
       throw new TypeError("Unknown rounding mode");
     }
-    return roundedQuotient(this.#numerator, this.#denominator, mode);
+    return new Rational.#Integer(roundedQuotient(this.#numerator, this.#denominator, mode));
   }
 
-  roundTo(places, mode = "half-even") {
+  roundTo(places, mode = "half-up") {
     if (!Number.isSafeInteger(places)) {
       throw new RangeError("Decimal places must be a safe integer");
     }
@@ -669,31 +678,6 @@ export class Rational {
     return new Rational(
       roundedQuotient(this.#numerator, this.#denominator * scale, mode) * scale,
     );
-  }
-
-  /**
-   * The nearest integer as a Core Integer (round() returns a bigint). The
-   * default mode is half-even; school rounding is "half-up".
-   * @param {"half-even"|"half-up"|"toward-zero"|"floor"|"ceil"} [mode]
-   * @returns {Integer}
-   */
-  roundInteger(mode = "half-even") {
-    return new Rational.#Integer(this.round(mode));
-  }
-
-  /** floor() as a Core Integer. */
-  floorInteger() {
-    return new Rational.#Integer(this.floor());
-  }
-
-  /** ceil() as a Core Integer. */
-  ceilInteger() {
-    return new Rational.#Integer(this.ceil());
-  }
-
-  /** trunc() as a Core Integer. */
-  truncInteger() {
-    return new Rational.#Integer(this.trunc());
   }
 
   /**
