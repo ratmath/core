@@ -6,7 +6,7 @@
  * Division returns a Rational or RationalInterval if the result is not a whole number.
  */
 
-import { Rational } from "./rational.js";
+import { Rational, checkRoundingMode } from "./rational.js";
 import { RationalInterval } from "./rational-interval.js";
 import { BaseSystem } from "./base-system.js";
 import { plainIntegerOperand, toExactBigInt } from "./bigint.js";
@@ -464,9 +464,7 @@ export class Integer {
    */
   /** This integer: rounding an Integer leaves it unchanged (matches Rational#round). */
   round(mode = "half-up") {
-    if (!new Set(["half-even", "half-up", "toward-zero", "floor", "ceil"]).has(mode)) {
-      throw new TypeError("Unknown rounding mode");
-    }
+    checkRoundingMode(mode);
     return this;
   }
 

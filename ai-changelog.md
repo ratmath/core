@@ -12,6 +12,8 @@ James chose this after a survey of every dependent: of 44 call sites only 9 (sym
 
 James then asked to flip the default rounding mode to `"half-up"` (school rounding) for `round` and `roundTo`, since RatMath is mainly educational; `"half-even"` stays as an option. RiX's Round inherits the new default; its docs (documentation/eval/objects/rational.md) say half-even and should change when RiX moves to Core 0.12.0.
 
+Also at James's request: named conventions `ROUNDING_MODES` (half-up/down/even/odd/ceil/floor, floor, ceil, toward-zero, away-from-zero), function modes (given value/floor/ceil/fraction, must return floor or ceil), and `rounding(mode)` in src/rounding.js, a rounder value rather than a global default so libraries cannot affect each other. Tests in tests/rounding-modes.test.js tabulate every mode on ties and non-ties of both signs.
+
 ## Classroom clock times and dates
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-28

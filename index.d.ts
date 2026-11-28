@@ -15,12 +15,28 @@ export type ApproximationReason =
 export type SternBrocotDirection = "L" | "R";
 export type LimitBehavior = "trunc" | "null" | "error";
 export type EmptyGridBehavior = "mid" | "null" | "error";
-export type RoundingMode =
-  | "half-even"
+export type RoundingModeName =
   | "half-up"
-  | "toward-zero"
+  | "half-down"
+  | "half-even"
+  | "half-odd"
+  | "half-ceil"
+  | "half-floor"
   | "floor"
-  | "ceil";
+  | "ceil"
+  | "toward-zero"
+  | "away-from-zero";
+/** What a custom rounding function sees for a value that is not an integer. */
+export interface RoundingInfo {
+  readonly value: Rational;
+  readonly floor: Integer;
+  readonly ceil: Integer;
+  /** value - floor, strictly between 0 and 1. */
+  readonly fraction: Rational;
+}
+/** A named convention, or your own: return info.floor or info.ceil. */
+export type RoundingFunction = (info: RoundingInfo) => Integer | bigint | number;
+export type RoundingMode = RoundingModeName | RoundingFunction;
 
 export interface DecimalMetadata {
   wholePart?: bigint;
@@ -73,7 +89,7 @@ export interface ApproximationRepresentation {
   provisionalSuffix?: string | ReadonlyArray<string>;
   requested?: Readonly<Record<string, unknown>>;
   achieved?: Readonly<Record<string, unknown>>;
-  roundingMode?: RoundingMode;
+  roundingMode?: RoundingModeName;
   presentationHint?: Readonly<ApproximationPresentationHint>;
 }
 
@@ -145,7 +161,7 @@ export function certifiedRadixPrefix(options: {
   reason?: ApproximationReason;
   requested?: Readonly<Record<string, unknown>> | null;
   achieved?: Readonly<Record<string, unknown>> | null;
-  roundingMode?: RoundingMode | null;
+  roundingMode?: RoundingModeName | null;
   sourceId?: string | number | symbol;
 }): CertifiedApproximation;
 
@@ -1060,3 +1076,15 @@ export class NumeralSystem {
 }
 export const NUMERAL_SYSTEM_SCHEMA: "ratmath.numeral-system@1";
 export const NUMERAL_LIMITS: Readonly<{tokens: 256; tokenLength: 32; sourceLength: 65536; digits: 4096; bits: 16384}>;
+
+/** Every named rounding convention, default ("half-up") first. */
+export declare const ROUNDING_MODES: readonly RoundingModeName[];
+export declare function isRoundingMode(mode: unknown): mode is RoundingMode;
+/** A rounder for one convention; it changes nothing globally. */
+export interface Rounder {
+  (value: Integer | Rational | bigint | number | string): Integer;
+  (value: Integer | Rational | bigint | number | string, places: number): Rational;
+  readonly mode: RoundingMode;
+}
+export declare function rounding(mode?: RoundingMode): Rounder;
+

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added (0.12.0)
+
+- More rounding conventions (`ROUNDING_MODES`): `half-down`, `half-odd`,
+  `half-ceil`, `half-floor` and `away-from-zero` join `half-up`,
+  `half-even`, `floor`, `ceil` and `toward-zero`. A mode may also be a
+  function given `{ value, floor, ceil, fraction }` that returns `floor` or
+  `ceil`. `rounding(mode)` makes a reusable rounder (`r(x)`, `r(x, places)`)
+  without any global setting.
+
 ### Changed (breaking; release as 0.12.0)
 
 - `Rational#floor()`, `ceil()`, `trunc()` and `round(mode)` return a Core
