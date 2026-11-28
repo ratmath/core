@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-### Added (0.12.0)
+## 0.12.0 - 2026-11-28
+
+### Added
 
 - More rounding conventions (`ROUNDING_MODES`): `half-down`, `half-odd`,
   `half-ceil`, `half-floor` and `away-from-zero` join `half-up`,
@@ -10,22 +12,6 @@
   function given `{ value, floor, ceil, fraction }` that returns `floor` or
   `ceil`. `rounding(mode)` makes a reusable rounder (`r(x)`, `r(x, places)`)
   without any global setting.
-
-### Changed (breaking; release as 0.12.0)
-
-- `Rational#floor()`, `ceil()`, `trunc()` and `round(mode)` return a Core
-  `Integer` instead of a bigint. The bigint is `.value`, a JS number is
-  `.toNumber()`; `BigInt(x)`, `Number(x)` and `new Rational(x)` read an
-  Integer exactly. `Integer` gains the same four methods, returning itself.
-  Code doing bigint arithmetic on the result (`x.floor() - 1n`) or comparing
-  results with `===` must use `.value`. The Shelf libraries, calc-app and
-  RiX were checked and work with both forms.
-- The default rounding mode of `round()` and `roundTo()` (Rational and
-  Integer) is now `"half-up"`, school rounding with ties away from zero
-  (6.5 -> 7, -2.5 -> -3, 65 to the nearest ten -> 70). Banker's rounding is
-  still available as `"half-even"`.
-
-### Added
 
 - Classroom clock times and dates in `@ratmath/core/units`, explicitly not a
   date library (no time zones, daylight saving, leap seconds or historical
@@ -52,6 +38,20 @@
   `penny`, `nickel`, `dime`, `quarter`.
 - `Quantity#toClock({ seconds, wrap, round })` writes a duration as `h:mm`
   or `h:mm:ss`, exactly; `wrap: 12` or `24` reads it as a time of day.
+
+### Changed (breaking)
+
+- `Rational#floor()`, `ceil()`, `trunc()` and `round(mode)` return a Core
+  `Integer` instead of a bigint. The bigint is `.value`, a JS number is
+  `.toNumber()`; `BigInt(x)`, `Number(x)` and `new Rational(x)` read an
+  Integer exactly. `Integer` gains the same four methods, returning itself.
+  Code doing bigint arithmetic on the result (`x.floor() - 1n`) or comparing
+  results with `===` must use `.value`. The Shelf libraries, calc-app and
+  RiX were checked and work with both forms.
+- The default rounding mode of `round()` and `roundTo()` (Rational and
+  Integer) is now `"half-up"`, school rounding with ties away from zero
+  (6.5 -> 7, -2.5 -> -3, 65 to the nearest ten -> 70). Banker's rounding is
+  still available as `"half-even"`.
 
 ### Fixed
 
