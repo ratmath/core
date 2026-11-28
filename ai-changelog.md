@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Release 0.12.0
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+Bumped to 0.12.0 and moved the CHANGELOG Unreleased entries under it.
+
+Prepublish gate checked: `bunx bun@1.4.2 test --coverage` passes (lines 99.97% under Bun 1.4.2; Bun 1.4.4 reports 98.3% for the same code, a Bun measurement difference), examples and pack pass.
+
 ## Rounding returns Core Integers
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-28
