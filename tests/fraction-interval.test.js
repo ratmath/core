@@ -52,6 +52,29 @@ describe("FractionInterval", () => {
       expect(right.low.equals(new Fraction(2, 4))).toBe(true);
       expect(right.high.equals(new Fraction(1, 2))).toBe(true);
     });
+
+    it("stays inside the interval when the denominators' signs differ", () => {
+      const inside = (I) => {
+        const [left, right] = I.mediantSplit();
+        const m = left.high;
+        expect(right.low.equals(m)).toBe(true);
+        expect(left.low.equals(I.low)).toBe(true);
+        expect(right.high.equals(I.high)).toBe(true);
+        expect(I.low.lessThanOrEqual(m) && m.lessThanOrEqual(I.high)).toBe(true);
+        return m;
+      };
+      // 1/-2 and 1/3: componentwise (1 + 1)/(-2 + 3) = 2 would be outside [-1/2, 1/3]
+      const m = inside(new FractionInterval(new Fraction(1n, -2n), new Fraction(1n, 3n)));
+      expect(m.numerator).toBe(0n);
+      expect(m.denominator).toBe(5n);
+      inside(new FractionInterval(new Fraction(2n, -4n), new Fraction(3n, 9n)));
+      inside(new FractionInterval(new Fraction(-1n, 0n, { allowInfinite: true }), new Fraction(1n, -2n)));
+      inside(new FractionInterval(new Fraction(1n, -2n), new Fraction(1n, 0n, { allowInfinite: true })));
+      // both denominators negative: the component pairs are kept as they are
+      const [l] = new FractionInterval(new Fraction(1n, -2n), new Fraction(1n, -3n)).mediantSplit();
+      expect(l.high.numerator).toBe(2n);
+      expect(l.high.denominator).toBe(-5n);
+    });
   });
 
   describe("partitionWithMediants", () => {

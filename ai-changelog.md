@@ -2,6 +2,14 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## mediantSplit with mixed-sign denominators
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+`FractionInterval#mediantSplit` reads a negative-denominator end as (-n)/(-d) when the two denominators differ in sign, so the mediant stays inside the interval.
+
+An external QA review showed `[1/-2, 1/3]` splitting at 2. Same-sign pairs keep their component form. The integers docs page also gains a paragraph on number, engine BigInt and library limits.
+
 ## School helpers: exact rounding to Integers, place value, coins, clock text
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-27

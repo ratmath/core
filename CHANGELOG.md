@@ -16,7 +16,17 @@
 - `Quantity#toClock({ seconds, wrap, round })` writes a duration as `h:mm`
   or `h:mm:ss`, exactly; `wrap: 12` or `24` reads it as a time of day.
 
+### Fixed
+
+- `FractionInterval#mediantSplit` (and so `partitionWithMediants`) keeps the
+  mediant inside the interval when the endpoints' denominators have different
+  signs: `[1/-2, 1/3]` split at `2` before, now at `0/5`. Same-sign pairs are
+  unchanged.
+
 ### Docs
+
+- The integers page separates safe `number` inputs, engine BigInt capacity and
+  library budgets.
 
 - The rounding section says first that the default is round half to even
   and shows school rounding with `"half-up"`.
