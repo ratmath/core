@@ -2,6 +2,12 @@
 
 Please note that there were many AI changes done before this log. Below you should find short summaries of what the AI coding agent has done.
 
+## Declare Bun 1.4.2 in engines
+**Model:** Claude Opus 5.5
+**Date:** 2026-11-28
+
+`engines` lists `"bun": ">=1.4.2"` next to Node 22, since Bun 1.4.0 caps BigInt at 2^20 bits and CI runs 1.4.2.
+
 ## One contract for plain number operands
 **Model:** Claude Opus 5.5
 **Date:** 2026-11-28
